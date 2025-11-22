@@ -18,6 +18,8 @@ import { GmailIcon } from '@/components/GmailIcon';
 import { OutlookIcon } from '@/components/OutlookIcon';
 import Logo from '@/components/Logo';
 import { Link } from 'react-router-dom';
+import { authClient } from '@/lib/authClient';
+import { toast } from 'sonner';
 
 const FormSchema = z.object({
   email: z.email('Please enter a valid email address'),
@@ -33,14 +35,25 @@ export function ResetpasswordPage() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    console.log(data);
-    setIsLoading(true);
+  const onSubmit = async (payload: z.infer<typeof FormSchema>) => {
+    try {
+      setIsLoading(true);
+      const { error } = await authClient.requestPasswordReset({
+        email: payload.email,
+      });
+      if (error) {
+        toast.error(
+          error.message ||
+            "Couldn't request a password reset. Please try once again."
+        );
+        return;
+      }
 
-    setTimeout(() => {
+      toast.success('Please check your email for reset password link.');
+    } finally {
       setIsLoading(false);
       form.reset();
-    }, 2000);
+    }
   };
 
   return (
