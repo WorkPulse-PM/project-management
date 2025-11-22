@@ -17,7 +17,7 @@ import Logo from '@/components/Logo';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
 import { authClient } from '@/lib/authClient';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 const FormSchema = z
@@ -59,13 +59,14 @@ const FormSchema = z
 
 export function SigninPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [searchParams] = useSearchParams();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     defaultValues: {
-      email: '',
+      email: searchParams.get('email') || '',
       password: '',
       rememberMe: false,
     },
