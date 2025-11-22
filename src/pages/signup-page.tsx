@@ -16,70 +16,25 @@ import { Spinner } from '@/components/ui/spinner';
 import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { Link } from 'react-router-dom';
+import { authClient } from '@/lib/authClient';
+import { toast } from 'sonner';
 
 const FormSchema = z
   .object({
-    firstName: z.string(),
-    lastName: z.string(),
-    email: z.string(),
-    password: z.string(),
+    name: z.string().trim().nonempty('Full name is required'),
+    email: z.string().trim().nonempty('Email is required'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters long')
+      .nonempty('Password is required'),
   })
   .superRefine((data, ctx) => {
-    // Validate first name first
-    if (!data.firstName || data.firstName.trim().length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'First name is required',
-        path: ['firstName'],
-      });
-      return;
-    }
-
-    // Validate last name
-    if (!data.lastName || data.lastName.trim().length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Last name is required',
-        path: ['lastName'],
-      });
-      return;
-    }
-
-    // Validate email
-    if (!data.email || data.email.trim().length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Email is required',
-        path: ['email'],
-      });
-      return;
-    }
-
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(data.email)) {
       ctx.addIssue({
         code: 'custom',
         message: 'Please enter a valid email address',
         path: ['email'],
-      });
-      return;
-    }
-
-    // Validate password (only if all above are valid)
-    if (!data.password || data.password.trim().length === 0) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Password is required',
-        path: ['password'],
-      });
-      return;
-    }
-
-    if (data.password.length < 8) {
-      ctx.addIssue({
-        code: 'custom',
-        message: 'Password must be at least 8 characters long',
-        path: ['password'],
       });
       return;
     }
@@ -113,21 +68,29 @@ export function SignupPage() {
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     defaultValues: {
-      firstName: '',
-      lastName: '',
+      name: '',
       email: '',
       password: '',
     },
   });
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    console.log(data);
-    setIsLoading(true);
+  const onSubmit = async (payload: z.infer<typeof FormSchema>) => {
+    try {
+      console.log(import.meta.env.VITE_FRONTEND_URL);
+      setIsLoading(true);
+      const { data, error } = await authClient.signUp.email({
+        ...payload,
+        callbackURL: import.meta.env.VITE_FRONTEND_URL + '/auth/signin',
+      });
+      if (error) {
+        toast.error(error.message || 'Something went wrong! Please try again');
+        return;
+      }
 
-    setTimeout(() => {
+      console.log(data);
+    } finally {
       setIsLoading(false);
-      form.reset();
-    }, 2000);
+    }
   };
 
   return (
@@ -153,34 +116,19 @@ export function SignupPage() {
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <div className="flex gap-5 flex-col">
                 <div className="flex gap-4 flex-col">
-                  <div className="flex gap-4">
-                    <FormField
-                      control={form.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>First Name</FormLabel>
-                          <FormControl>
-                            <Input size="36" type="text" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem className="flex-1">
-                          <FormLabel>Last Name</FormLabel>
-                          <FormControl>
-                            <Input size="36" type="text" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Full Name</FormLabel>
+                        <FormControl>
+                          <Input size="36" type="text" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <FormField
                     control={form.control}
                     name="email"
