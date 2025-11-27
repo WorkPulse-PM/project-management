@@ -174,7 +174,7 @@ export function SigninPage() {
                       )}
                     />
                     <Button asChild variant="link" color="primary">
-                      <Link to="/auth/reset-password">Forgot Password?</Link>
+                      <Link to="/auth/forgot-password">Forgot Password?</Link>
                     </Button>
                   </div>
                   <Button className="w-full" type="submit" disabled={isLoading}>
