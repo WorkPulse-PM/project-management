@@ -7,6 +7,12 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Set working directory
 WORKDIR /app
 
+# Accept build-time env vars
+ARG VITE_BACKEND_URL
+ARG VITE_FRONTEND_URL
+ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
+ENV VITE_FRONTEND_URL=$VITE_FRONTEND_URL
+
 # Copy lockfile and package.json first to leverage caching
 COPY package.json pnpm-lock.yaml* ./
 
