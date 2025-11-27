@@ -1,9 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
@@ -12,120 +11,182 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Divider } from '@/components/ui/divider';
 import { Spinner } from '@/components/ui/spinner';
-import { GmailIcon } from '@/components/GmailIcon';
-import { OutlookIcon } from '@/components/OutlookIcon';
+import { CircleCheck, EyeIcon, EyeOffIcon } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Input, InputWrapper } from '@/components/ui/input';
 import Logo from '@/components/Logo';
-import { Link } from 'react-router-dom';
-import { authClient } from '@/lib/authClient';
-import { toast } from 'sonner';
 
-const FormSchema = z.object({
-  email: z.email('Please enter a valid email address'),
-});
+const FormSchema = z
+  .object({
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters long')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/\d/, 'Password must contain at least one number'),
+    confirmPassword: z.string(),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
+const passwordSchema = z
+  .string()
+  .min(8, { message: 'At least 8 characters' })
+  .regex(/\d/, { message: 'At least one number' })
+  .regex(/[a-z]/, { message: 'At least one lowercase letter' })
+  .regex(/[A-Z]/, { message: 'At least one uppercase letter' });
 
 export function ResetpasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
 
+  const [showPassword, setShowPassword] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function togglePasswordVisibility(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowPassword(!showPassword);
+  }
+
+  const IconComponent = showPassword ? EyeOffIcon : EyeIcon;
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
-      email: '',
+      password: '',
+      confirmPassword: '',
     },
   });
 
-  const onSubmit = async (payload: z.infer<typeof FormSchema>) => {
-    try {
-      setIsLoading(true);
-      const { error } = await authClient.requestPasswordReset({
-        email: payload.email,
-      });
-      if (error) {
-        toast.error(
-          error.message ||
-            "Couldn't request a password reset. Please try once again."
-        );
-        return;
-      }
+  const password = form.watch('password');
 
-      toast.success('Please check your email for reset password link.');
-    } finally {
+  const validation = useMemo(
+    () => passwordSchema.safeParse(password),
+    [password]
+  );
+
+  const errors = useMemo(() => {
+    if (validation.success) return [];
+    return validation.error.issues.map(e => e.message);
+  }, [validation]);
+
+  const progress = useMemo(() => {
+    const totalChecks = 4;
+    const passedChecks = totalChecks - errors.length;
+    return (passedChecks / totalChecks) * 100;
+  }, [errors]);
+
+  const isValid = (message: string) => !errors.includes(message);
+
+  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+    console.log(data);
+    setIsLoading(true);
+
+    setTimeout(() => {
       setIsLoading(false);
       form.reset();
-    }
+    }, 2000);
   };
 
   return (
     <div className="h-screen w-screen flex justify-center items-center bg-bg px-5">
       <div className="w-100 flex bg-bg">
         <div className="flex-1 flex flex-col gap-8">
-          <div>
-            <Logo />
-          </div>
-          <div className="flex gap-2 flex-col">
-            <h1 className=" heading-5">Reset password</h1>
-            <p className="text-fg-secondary text-sm">
-              Enter the email address you registered with and we&apos;ll send
-              you the reset instructions
-            </p>
+          <div className="flex-1 flex flex-col gap-6">
+            <div>
+              <Logo />
+            </div>
+            <div className="flex gap-2 flex-col">
+              <h1 className="heading-5">Change Your Password</h1>
+              <p className="text-fg-secondary text-sm">
+                Enter a new password below to change your password.
+              </p>
+            </div>
           </div>
           <Form {...form}>
-            <form
-              className=" flex gap-4 flex-col"
-              onSubmit={form.handleSubmit(onSubmit)}
-            >
-              <div className="flex gap-5 flex-col">
-                <div className="flex gap-5 flex-col">
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Email Address</FormLabel>
-                        <FormControl>
-                          <Input size="36" type="email" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                <Button className="w-full" type="submit" disabled={isLoading}>
-                  {isLoading ? (
-                    <Spinner variant="default" />
-                  ) : (
-                    'Send Reset Instructions'
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="flex gap-4 flex-col">
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>New password</FormLabel>
+                      <FormControl>
+                        <InputWrapper>
+                          <Input
+                            {...field}
+                            id="toggle-visible-password"
+                            ref={inputRef}
+                            className="peer"
+                            type={showPassword ? 'text' : 'password'}
+                          />
+                          <IconComponent
+                            className="hover:text-fg peer-disabled:text-fg-disabled cursor-pointer peer-disabled:pointer-events-none"
+                            onMouseDown={togglePasswordVisibility}
+                          />
+                        </InputWrapper>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </Button>
-              </div>
-              <Divider className=" my-2.5" />
-
-              <div className="flex gap-3">
-                <Button
-                  asChild
-                  variant="outline"
-                  color="neutral"
-                  className="w-full text-fg-secondary"
-                >
-                  <Link to="https://mail.google.com" target="_blank">
-                    <GmailIcon />
-                    Open Gmail
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  color="neutral"
-                  className="w-full text-fg-secondary"
-                >
-                  <Link
-                    to="https://outlook.com"
-                    className="flex items-center justify-center gap-1.5"
-                    target="_blank"
-                  >
-                    <OutlookIcon />
-                    Open Outlook
-                  </Link>
+                />
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Re-enter new password</FormLabel>
+                      <div className="flex flex-col gap-4">
+                        <FormControl>
+                          <InputWrapper>
+                            <Input
+                              {...field}
+                              id="toggle-visible-password"
+                              ref={inputRef}
+                              className="peer"
+                              type={showPassword ? 'text' : 'password'}
+                            />
+                            <IconComponent
+                              className="hover:text-fg peer-disabled:text-fg-disabled cursor-pointer peer-disabled:pointer-events-none"
+                              onMouseDown={togglePasswordVisibility}
+                            />
+                          </InputWrapper>
+                        </FormControl>
+                        <div className="body-13 flex w-full flex-col gap-1.5">
+                          <Progress value={progress} />
+                          <p className="text-sm font-semibold">
+                            Your Password must contain
+                          </p>
+                          {[
+                            'At least 8 characters',
+                            'At least one number',
+                            'At least one lowercase letter',
+                            'At least one uppercase letter',
+                          ].map(label => (
+                            <p
+                              key={label}
+                              className="text-fg-tertiary flex items-center gap-2"
+                            >
+                              <CircleCheck
+                                className={`size-4 ${
+                                  isValid(label) ? 'text-success-text' : ''
+                                }`}
+                              />
+                              {label}
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button className="w-full" type="submit" disabled={isLoading}>
+                  {isLoading ? <Spinner variant="default" /> : 'Reset password'}
                 </Button>
               </div>
             </form>
