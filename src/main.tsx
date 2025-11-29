@@ -5,7 +5,11 @@ import { SigninPage } from '@/pages/signin-page.tsx';
 import { SignupPage } from '@/pages/signup-page';
 import { NotFoundPage } from '@/pages/not-found-page';
 import { createRoot } from 'react-dom/client';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  redirect,
+  RouterProvider,
+} from 'react-router-dom';
 import './index.css';
 import AuthLayout from '@/layouts/AuthLayout';
 import RootProvider from '@/providers/RootProvider';
@@ -15,6 +19,7 @@ import DashboardPage from '@/pages/dashboard-page';
 import SettingsPage from './pages/settings-page';
 import CreateProjectPage from './pages/projects/create-project-page';
 import ProjectBoardPage from './pages/projects/project-board-page';
+import MembersPage from './pages/projects/members/members-page';
 
 const router = createBrowserRouter([
   {
@@ -30,6 +35,11 @@ const router = createBrowserRouter([
           },
           {
             path: 'projects',
+            middleware: [
+              ({ params }) => {
+                if (!params.projectId) throw redirect('/');
+              },
+            ],
             children: [
               {
                 path: 'create',
@@ -37,7 +47,16 @@ const router = createBrowserRouter([
               },
               {
                 path: ':projectId',
-                Component: ProjectBoardPage,
+                children: [
+                  {
+                    index: true,
+                    Component: ProjectBoardPage,
+                  },
+                  {
+                    path: 'members',
+                    Component: MembersPage,
+                  },
+                ],
               },
             ],
           },
