@@ -24,17 +24,21 @@ type AvatarGroupProps = AvatarProps & {
   size?: string;
   avatarFallbackProps?: AvatarFallbackProps;
   avatars: { name: string; image: string }[];
+  avatarsCount?: number;
 };
 
 export default function AvatarGroup({
   avatars,
   size = '32',
+  avatarsCount = 3,
   avatarFallbackProps = {},
   ...rest
 }: AvatarGroupProps) {
+  const visibleAvatars = avatars.slice(0, avatarsCount);
+  const hiddenAvatarsCount = avatars.length - visibleAvatars.length;
   return (
     <div className="flex -space-x-2.5">
-      {avatars.map(person => (
+      {visibleAvatars.map(person => (
         <Avatar
           size={size}
           {...rest}
@@ -47,14 +51,19 @@ export default function AvatarGroup({
           </AvatarFallback>
         </Avatar>
       ))}
-      <Avatar size={size} className="border-4 border-bg hover:z-10">
-        <AvatarFallback
-          {...avatarFallbackProps}
-          className={cn('text-sm font-semibold', avatarFallbackProps.className)}
-        >
-          +9
-        </AvatarFallback>
-      </Avatar>
+      {hiddenAvatarsCount > 0 && (
+        <Avatar size={size} className="border-4 border-bg hover:z-10">
+          <AvatarFallback
+            {...avatarFallbackProps}
+            className={cn(
+              'text-sm font-semibold',
+              avatarFallbackProps.className
+            )}
+          >
+            +{hiddenAvatarsCount}
+          </AvatarFallback>
+        </Avatar>
+      )}
     </div>
   );
 }
