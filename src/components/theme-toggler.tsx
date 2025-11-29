@@ -8,23 +8,23 @@ export function ThemeToggler() {
   const isDark = theme === 'dark';
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center justify-between w-full gap-2 ">
+      {theme === 'dark' && (
+        <span className="flex items-center gap-1 font-semibold">
+          <MoonIcon size={16} />
+          <span>Dark Mode</span>
+        </span>
+      )}
+      {theme === 'light' && (
+        <span className="flex items-center gap-1 font-medium">
+          <SunIcon size={16} />
+          <span>Light Mode</span>
+        </span>
+      )}
       <Switch
         checked={isDark}
         onCheckedChange={() => setTheme(isDark ? 'light' : 'dark')}
       />
-      {theme === 'dark' && (
-        <span className="font-semibold flex items-center gap-1">
-          <span>Dark Mode</span>
-          <MoonIcon size={16} />
-        </span>
-      )}
-      {theme === 'light' && (
-        <span className="font-medium flex items-center gap-1">
-          <span>Light Mode</span>
-          <SunIcon size={16} />
-        </span>
-      )}
     </div>
   );
 }

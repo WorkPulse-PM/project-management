@@ -30,7 +30,7 @@ const DashboardPage = () => {
           </Link>
         </Button>
       </div>
-      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))]">
+      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))] grid-rows-[repeat(auto-fill,minmax(auto,1fr))]">
         {isPending ? (
           <Spinner />
         ) : (

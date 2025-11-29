@@ -1,13 +1,4 @@
 import {
-  Link,
-  Navigate,
-  Outlet,
-  useNavigate,
-  useLocation,
-} from 'react-router-dom';
-import { DashboardLoading } from '@/helpers/DashboardLoading';
-import { authClient } from '@/lib/authClient';
-import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
@@ -16,54 +7,19 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import {
-  Sidebar,
-  SidebarHeader,
-  SidebarProvider,
-  SidebarContent,
   SidebarInset,
-  SidebarMenu,
-  SidebarMenuItem,
-  SidebarMenuButton,
-  SidebarGroup,
-  SidebarGroupLabel,
-  SidebarGroupContent,
-  SidebarFooter,
+  SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
-import {
-  LayoutDashboard,
-  Settings,
-  Download,
-  LogOut,
-  HandHeart,
-  ChevronRight,
-  ListCollapse,
-} from 'lucide-react';
-
-import { ThemeToggler } from './components/theme-toggler';
-import { useQueryClient } from '@tanstack/react-query';
-
-const navigationItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  { label: 'Settings', icon: Settings, path: '/settings' },
-];
+import { DashboardLoading } from '@/helpers/DashboardLoading';
+import { authClient } from '@/lib/authClient';
+import { ListCollapse } from 'lucide-react';
+import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
+import AppSidebar from './components/AppSidebar';
 
 const AppLayout = () => {
-  const queryClient = useQueryClient();
   const { data, isPending } = authClient.useSession();
-  const navigate = useNavigate();
   const location = useLocation();
-
-  async function handleLogout() {
-    queryClient.clear();
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          navigate('/auth/signin');
-        },
-      },
-    });
-  }
 
   // Generate breadcrumb items from current path
   const getBreadcrumbs = () => {
@@ -118,76 +74,7 @@ const AppLayout = () => {
 
   return (
     <SidebarProvider>
-      <Sidebar>
-        <SidebarHeader className="p-4 border-b">
-          <h1 className="text-xl font-bold">Workpulse</h1>
-        </SidebarHeader>
-
-        <SidebarContent>
-          {/* Main Navigation */}
-          <SidebarGroup className="flex-1">
-            <SidebarMenu>
-              {navigationItems.map(item => {
-                const Icon = item.icon;
-                const isActive = location.pathname === item.path;
-                return (
-                  <SidebarMenuItem key={item.path}>
-                    <SidebarMenuButton
-                      className={isActive ? 'bg-fill3' : ''}
-                      onClick={() => navigate(item.path)}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroup>
-
-          {/* Invite Friends Section */}
-          <SidebarGroup>
-            <section className="flex items-center justify-center gap-3 border rounded-lg cursor-pointer border-soft hover:bg-fill2">
-              <HandHeart size={20} className="text-fg-secondary" />
-              <div>
-                <SidebarGroupLabel className="text-sm font-medium">
-                  Invite a friend
-                </SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <p className="px-2 py-1 text-xs text-muted-foreground">
-                    Get 15% off on your order
-                  </p>
-                </SidebarGroupContent>
-              </div>
-              <ChevronRight size={20} className="text-fg-secondary" />
-            </section>
-          </SidebarGroup>
-        </SidebarContent>
-
-        {/* Footer Section */}
-        <SidebarFooter>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <ThemeToggler />
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton>
-                <Download className="w-4 h-4" />
-                <span>Download App</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton onClick={handleLogout}>
-                <LogOut className="w-4 h-4" />
-                <span>Sign out</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarFooter>
-      </Sidebar>
-
+      <AppSidebar />
       <SidebarInset className="overflow-y-auto">
         <header className="sticky top-0 z-10 flex items-center gap-2 p-4 border-b">
           <SidebarTrigger>

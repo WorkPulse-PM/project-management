@@ -16,7 +16,7 @@ export default function ProjectCard(props: ProjectCardProps) {
     ? formatDate(createdAt, 'MMM dd, yyyy')
     : null;
   return (
-    <div className="flex flex-col gap-3 p-4 transition-colors border rounded-md cursor-pointer hover:border-primary-border">
+    <div className="flex flex-col w-full h-full gap-3 p-4 transition-colors border rounded-md cursor-pointer hover:border-primary-border">
       <div className="flex items-center gap-2">
         <Avatar size="36">
           <AvatarFallback>{getInitials(name)}</AvatarFallback>
@@ -30,7 +30,9 @@ export default function ProjectCard(props: ProjectCardProps) {
           <MoreVertical />
         </IconButton>
       </div>
-      <p className="flex-1 text-sm text-fg-secondary">{description}</p>
+      <p className="flex-1 text-sm text-fg-secondary line-clamp-2">
+        {description}
+      </p>
       <div className="flex items-center justify-between">
         {formattedCreatedAt ? (
           <Tooltip>
