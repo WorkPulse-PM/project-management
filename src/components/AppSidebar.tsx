@@ -11,25 +11,32 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { authClient } from '@/lib/authClient';
-import { LayoutDashboard, LogOut } from 'lucide-react';
+import { LayoutDashboard, LogOut, MailOpen } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { ThemeToggler } from './theme-toggler';
-import { Divider } from './ui/divider';
 import {
   NavigationItem,
   ProjectSpecificNavigation,
 } from './SidebarNavigationItem';
+import { Avatar, AvatarFallback } from './ui/avatar';
+import { getInitials } from './ui/avatar-group';
+import { Divider } from './ui/divider';
 
 const defaultNavigationItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  {
+    label: 'Invitations',
+    icon: MailOpen,
+    path: '/invitations',
+  },
 ];
 
 export default function AppSidebar() {
   const { projectId } = useParams();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { data: session, isPending } = authClient.useSession();
 
   const isInsideProject = !!projectId;
 
@@ -67,11 +74,30 @@ export default function AppSidebar() {
       {/* Footer Section */}
       <SidebarFooter>
         <SidebarMenu>
-          <SidebarMenuItem>
+          {!isPending && session?.user && (
+            <SidebarMenuItem>
+              <SidebarMenuButton className="h-auto py-1">
+                <Avatar size="36">
+                  <AvatarFallback>
+                    {getInitials(session?.user?.name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col">
+                  <h4 className="font-semibold text-fg">
+                    {session?.user.name}
+                  </h4>
+                  <span className="text-xs text-fg-secondary">
+                    @{session?.user?.username}
+                  </span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+          {/* <SidebarMenuItem>
             <SidebarMenuButton>
               <ThemeToggler />
             </SidebarMenuButton>
-          </SidebarMenuItem>
+          </SidebarMenuItem> */}
           <SidebarMenuItem>
             <SidebarMenuButton onClick={handleLogout}>
               <LogOut className="w-4 h-4" />

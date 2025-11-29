@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { NavLink, useParams } from 'react-router-dom';
 
-import type { ComponentType } from 'react';
+import { type ComponentType } from 'react';
 
 export const NavigationItem = ({
   label,
