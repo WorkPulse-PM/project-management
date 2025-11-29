@@ -1,32 +1,30 @@
-import { useEffect, useState } from "react"
-import { Loader2, MoonIcon, SunIcon } from "lucide-react"
-import { useTheme } from "@/components/theme-provider"
-import { IconButton } from "@/components/ui/button"
+import { useTheme } from '@/components/theme-provider';
+import { Switch } from './ui/switch';
+import { MoonIcon, SunIcon } from 'lucide-react';
 
 export function ThemeToggler() {
-const [mounted, setMounted] = useState(false)
-const { theme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme();
 
-  const toggleTheme = () => {
-  	setTheme(theme === "light" ? "dark" : "light")
-  }
-
-  useEffect(() => {
-  	setMounted(true)
-  }, [])
-
-  if (!mounted) {
-  	return (
-  		<IconButton variant="outline" color="neutral" disabled>
-  			<Loader2 className="size-5 animate-spin" />
-  		</IconButton>
-  	)
-  }
+  const isDark = theme === 'dark';
 
   return (
-  	<IconButton variant="outline" color="neutral" onClick={toggleTheme}>
-  		{theme === "light" ? <MoonIcon /> : <SunIcon />}
-  	</IconButton>
-  )
-
+    <div className="flex items-center gap-2">
+      <Switch
+        checked={isDark}
+        onCheckedChange={() => setTheme(isDark ? 'light' : 'dark')}
+      />
+      {theme === 'dark' && (
+        <span className="font-semibold flex items-center gap-1">
+          <span>Dark Mode</span>
+          <MoonIcon size={16} />
+        </span>
+      )}
+      {theme === 'light' && (
+        <span className="font-medium flex items-center gap-1">
+          <span>Light Mode</span>
+          <SunIcon size={16} />
+        </span>
+      )}
+    </div>
+  );
 }

@@ -1,6 +1,5 @@
 import AppLayout from '@/AppLayout';
 import { ThemeProvider } from '@/components/theme-provider.tsx';
-import { OnboardingPage } from '@/pages/onboarding-page';
 import { ForgotpasswordPage } from '@/pages/forgot-password-page';
 import { SigninPage } from '@/pages/signin-page.tsx';
 import { SignupPage } from '@/pages/signup-page';
@@ -12,6 +11,10 @@ import AuthLayout from '@/layouts/AuthLayout';
 import RootProvider from '@/providers/RootProvider';
 import { OfflineDetector } from '@/components/OfflineDetcetor';
 import { ResetpasswordPage } from '@/pages/reset-password-page';
+import DashboardPage from '@/pages/dashboard-page';
+import SettingsPage from './pages/settings-page';
+
+console.log(import.meta.env.VITE_BACKEND_URL);
 
 const router = createBrowserRouter([
   {
@@ -22,8 +25,12 @@ const router = createBrowserRouter([
         Component: AppLayout,
         children: [
           {
-            path: 'onboarding',
-            Component: OnboardingPage,
+            index: true,
+            Component: DashboardPage,
+          },
+          {
+            path: '/settings',
+            Component: SettingsPage,
           },
         ],
       },

@@ -1,6 +1,20 @@
-import { Navigate, Outlet } from 'react-router-dom';
+import {
+  Link,
+  Navigate,
+  Outlet,
+  useNavigate,
+  useLocation,
+} from 'react-router-dom';
 import Loading from './components/Loading';
 import { authClient } from './lib/authClient';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 import {
   Sidebar,
   SidebarHeader,
@@ -14,25 +28,87 @@ import {
   SidebarGroupLabel,
   SidebarGroupContent,
   SidebarFooter,
+  SidebarTrigger,
 } from '@/components/ui/sidebar';
 import {
-  Home,
-  Compass,
-  Utensils,
-  ShoppingBag,
-  Heart,
-  Tag,
-  HelpCircle,
-  Truck,
-  Users,
+  LayoutDashboard,
+  Settings,
   Download,
   LogOut,
   HandHeart,
   ChevronRight,
+  ListCollapse,
 } from 'lucide-react';
+
+import { ThemeToggler } from './components/theme-toggler';
+
+const navigationItems = [
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
+  { label: 'Settings', icon: Settings, path: '/settings' },
+];
 
 const AppLayout = () => {
   const { data, isPending } = authClient.useSession();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  async function handleLogout() {
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          navigate('/auth/signin');
+        },
+      },
+    });
+  }
+
+  // Generate breadcrumb items from current path
+  const getBreadcrumbs = () => {
+    const pathnames = location.pathname.split('/').filter(x => x);
+
+    // Always show breadcrumbs
+    // If on root, show "Dashboard"
+    if (pathnames.length === 0) {
+      return (
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbPage>Dashboard</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      );
+    }
+
+    return (
+      <Breadcrumb>
+        <BreadcrumbList>
+          {pathnames.map((segment, index) => {
+            const path = `/${pathnames.slice(0, index + 1).join('/')}`;
+            const isLast = index === pathnames.length - 1;
+
+            // Capitalize first letter of segment for display
+            const label = segment.charAt(0).toUpperCase() + segment.slice(1);
+
+            return (
+              <div key={path} className="flex items-center gap-2">
+                {index > 0 && <BreadcrumbSeparator />}
+                <BreadcrumbItem>
+                  {isLast ? (
+                    <BreadcrumbPage>{label}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink asChild>
+                      <Link to={path}>{label}</Link>
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+              </div>
+            );
+          })}
+        </BreadcrumbList>
+      </Breadcrumb>
+    );
+  };
 
   if (isPending) return <Loading overlay />;
   if (!data) return <Navigate to={'/auth/signin'} replace />;
@@ -48,54 +124,21 @@ const AppLayout = () => {
           {/* Main Navigation */}
           <SidebarGroup className="flex-1">
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Home className="w-4 h-4" />
-                  <span>Home</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Compass className="w-4 h-4" />
-                  <span>Browse All</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Utensils className="w-4 h-4" />
-                  <span>Restaurants</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <ShoppingBag className="w-4 h-4" />
-                  <span>My Orders</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Heart className="w-4 h-4" />
-                  <span>Favorites</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Tag className="w-4 h-4" />
-                  <span>Promotions</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <HelpCircle className="w-4 h-4" />
-                  <span>Help</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton>
-                  <Truck className="w-4 h-4" />
-                  <span>Track my Delivery</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {navigationItems.map(item => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <SidebarMenuItem key={item.path}>
+                    <SidebarMenuButton
+                      className={isActive ? 'bg-fill3' : ''}
+                      onClick={() => navigate(item.path)}
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroup>
 
@@ -123,8 +166,7 @@ const AppLayout = () => {
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton>
-                <Users className="w-4 h-4" />
-                <span>Business Account</span>
+                <ThemeToggler />
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
@@ -134,7 +176,7 @@ const AppLayout = () => {
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <SidebarMenuButton>
+              <SidebarMenuButton onClick={handleLogout}>
                 <LogOut className="w-4 h-4" />
                 <span>Sign out</span>
               </SidebarMenuButton>
@@ -144,7 +186,15 @@ const AppLayout = () => {
       </Sidebar>
 
       <SidebarInset className="overflow-y-auto">
-        <Outlet />
+        <header className="sticky top-0 z-10 border-b p-4 flex items-center gap-2">
+          <SidebarTrigger>
+            <ListCollapse size={20} />
+          </SidebarTrigger>
+          {getBreadcrumbs()}
+        </header>
+        <main className="p-6">
+          <Outlet />
+        </main>
       </SidebarInset>
     </SidebarProvider>
   );
