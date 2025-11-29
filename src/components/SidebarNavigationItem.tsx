@@ -1,5 +1,12 @@
 import { SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { Kanban, Paperclip, Settings } from 'lucide-react';
+import {
+  Kanban,
+  Paperclip,
+  Presentation,
+  Settings,
+  UserLock,
+  Users,
+} from 'lucide-react';
 import { NavLink, useParams } from 'react-router-dom';
 
 import type { ComponentType } from 'react';
@@ -31,9 +38,24 @@ export const ProjectSpecificNavigation = () => {
   const { projectId } = useParams();
   const items = [
     {
+      label: 'Overview',
+      icon: Presentation,
+      path: `/projects/${projectId}/overview`,
+    },
+    {
       label: 'Board',
       icon: Kanban,
       path: `/projects/${projectId}`,
+    },
+    {
+      label: 'Members',
+      icon: Users,
+      path: `/projects/${projectId}/members`,
+    },
+    {
+      label: 'Access Control',
+      icon: UserLock,
+      path: `/projects/${projectId}/access-control`,
     },
     {
       label: 'Attachments',
