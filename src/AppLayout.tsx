@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 
 import { ThemeToggler } from './components/theme-toggler';
+import { useQueryClient } from '@tanstack/react-query';
 
 const navigationItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
@@ -48,11 +49,13 @@ const navigationItems = [
 ];
 
 const AppLayout = () => {
+  const queryClient = useQueryClient();
   const { data, isPending } = authClient.useSession();
   const navigate = useNavigate();
   const location = useLocation();
 
   async function handleLogout() {
+    queryClient.clear();
     await authClient.signOut({
       fetchOptions: {
         onSuccess: () => {
@@ -144,14 +147,14 @@ const AppLayout = () => {
 
           {/* Invite Friends Section */}
           <SidebarGroup>
-            <section className="border border-soft rounded-lg flex items-center gap-3 justify-center cursor-pointer hover:bg-fill2">
+            <section className="flex items-center justify-center gap-3 border rounded-lg cursor-pointer border-soft hover:bg-fill2">
               <HandHeart size={20} className="text-fg-secondary" />
               <div>
                 <SidebarGroupLabel className="text-sm font-medium">
                   Invite a friend
                 </SidebarGroupLabel>
                 <SidebarGroupContent>
-                  <p className="text-xs text-muted-foreground px-2 py-1">
+                  <p className="px-2 py-1 text-xs text-muted-foreground">
                     Get 15% off on your order
                   </p>
                 </SidebarGroupContent>
@@ -186,7 +189,7 @@ const AppLayout = () => {
       </Sidebar>
 
       <SidebarInset className="overflow-y-auto">
-        <header className="sticky top-0 z-10 border-b p-4 flex items-center gap-2">
+        <header className="sticky top-0 z-10 flex items-center gap-2 p-4 border-b">
           <SidebarTrigger>
             <ListCollapse size={20} />
           </SidebarTrigger>
