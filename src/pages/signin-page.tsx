@@ -94,96 +94,85 @@ export function SigninPage() {
 
   return (
     <div className="h-screen w-screen flex bg-bg">
-      <div className="flex w-full">
-        <div className=" flex-1 md:block hidden">
-          <img
-            className="h-full w-full object-cover"
-            src="/signin-09/bg.png"
-            alt="Background Image"
-            width={400}
-            height={400}
-          />
-        </div>
-        <div className="flex w-full h-full justify-center items-center flex-1 p-5 bg-bg">
-          <div className=" w-100 flex flex-col gap-8">
-            <div className="flex-1 flex flex-col gap-6">
-              <div>
-                <Logo />
-              </div>
-              <div className="flex gap-2 flex-col">
-                <h1 className="heading-5">Sign In</h1>
-                <p className="text-fg-secondary text-sm">
-                  Don&apos;t have an account?{' '}
-                  <Button asChild variant="link" color="primary">
-                    <Link to="/auth/signup">Sign up</Link>
-                  </Button>
-                </p>
-              </div>
+      <div className="flex w-full h-full justify-center items-center flex-1 p-5 bg-bg">
+        <div className=" w-100 flex flex-col gap-8">
+          <div className="flex-1 flex flex-col gap-6">
+            <div>
+              <Logo />
             </div>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="flex gap-5 flex-col">
-                  <div className="flex gap-4 flex-col">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email Address</FormLabel>
-                          <FormControl>
-                            <Input size="36" type="email" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input size="36" type="password" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <FormField
-                      control={form.control}
-                      name="rememberMe"
-                      render={({ field }) => (
-                        <div className="flex items-center gap-2">
-                          <FormControl>
-                            <Checkbox
-                              id="remember-me"
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <FormLabel
-                            htmlFor="remember-me"
-                            className="font-normal text-fg-secondary"
-                          >
-                            Remember me
-                          </FormLabel>
-                        </div>
-                      )}
-                    />
-                    <Button asChild variant="link" color="primary">
-                      <Link to="/auth/forgot-password">Forgot Password?</Link>
-                    </Button>
-                  </div>
-                  <Button className="w-full" type="submit" disabled={isLoading}>
-                    {isLoading ? <Spinner variant="default" /> : 'Sign In'}
+            <div className="flex gap-2 flex-col">
+              <h1 className="heading-5">Sign In</h1>
+              <p className="text-fg-secondary text-sm">
+                Don&apos;t have an account?{' '}
+                <Button asChild variant="link" color="primary">
+                  <Link to="/auth/signup">Sign up</Link>
+                </Button>
+              </p>
+            </div>
+          </div>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+              <div className="flex gap-5 flex-col">
+                <div className="flex gap-4 flex-col">
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email Address</FormLabel>
+                        <FormControl>
+                          <Input size="36" type="email" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input size="36" type="password" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="flex justify-between items-center">
+                  <FormField
+                    control={form.control}
+                    name="rememberMe"
+                    render={({ field }) => (
+                      <div className="flex items-center gap-2">
+                        <FormControl>
+                          <Checkbox
+                            id="remember-me"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel
+                          htmlFor="remember-me"
+                          className="font-normal text-fg-secondary"
+                        >
+                          Remember me
+                        </FormLabel>
+                      </div>
+                    )}
+                  />
+                  <Button asChild variant="link" color="primary">
+                    <Link to="/auth/forgot-password">Forgot Password?</Link>
                   </Button>
                 </div>
-              </form>
-            </Form>
-          </div>
+                <Button className="w-full" type="submit" disabled={isLoading}>
+                  {isLoading ? <Spinner variant="default" /> : 'Sign In'}
+                </Button>
+              </div>
+            </form>
+          </Form>
         </div>
       </div>
     </div>
