@@ -45,7 +45,7 @@ export const ProjectSpecificNavigation = () => {
     {
       label: 'Board',
       icon: Kanban,
-      path: `/projects/${projectId}`,
+      path: `/projects/${projectId}/board`,
     },
     {
       label: 'Members',

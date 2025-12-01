@@ -7,7 +7,7 @@ import { NotFoundPage } from '@/pages/not-found-page';
 import { createRoot } from 'react-dom/client';
 import {
   createBrowserRouter,
-  redirect,
+  Navigate,
   RouterProvider,
 } from 'react-router-dom';
 import './index.css';
@@ -37,29 +37,27 @@ const router = createBrowserRouter([
             path: 'projects',
             children: [
               {
+                index: true,
+                element: <Navigate to="/" replace />,
+              },
+              {
                 path: 'create',
                 Component: CreateProjectPage,
               },
               {
-                path: '',
-                middleware: [
-                  ({ params }) => {
-                    if (!params.projectId) throw redirect('/');
-                  },
-                ],
+                path: ':projectId',
                 children: [
                   {
-                    path: ':projectId',
-                    children: [
-                      {
-                        index: true,
-                        Component: ProjectBoardPage,
-                      },
-                      {
-                        path: 'members',
-                        Component: MembersPage,
-                      },
-                    ],
+                    index: true,
+                    element: <Navigate to="board" replace />,
+                  },
+                  {
+                    path: 'board',
+                    Component: ProjectBoardPage,
+                  },
+                  {
+                    path: 'members',
+                    Component: MembersPage,
                   },
                 ],
               },
@@ -75,6 +73,10 @@ const router = createBrowserRouter([
         path: 'auth',
         Component: AuthLayout,
         children: [
+          {
+            index: true,
+            element: <Navigate to={'signin'} replace />,
+          },
           {
             path: 'signin',
             Component: SigninPage,
