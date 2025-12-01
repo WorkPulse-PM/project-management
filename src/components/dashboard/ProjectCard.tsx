@@ -16,7 +16,7 @@ export default function ProjectCard(props: ProjectCardProps) {
     ? formatDate(createdAt, 'MMM dd, yyyy')
     : null;
   return (
-    <div className="flex flex-col gap-3 p-4 transition-colors border rounded-md cursor-pointer hover:border-primary-border">
+    <div className="flex flex-col gap-3 p-4 transition-colors border rounded-md bg-elevation-level1 cursor-pointer hover:border-primary-border">
       <div className="flex items-center gap-2">
         <Avatar size="36">
           <AvatarFallback>{getInitials(name)}</AvatarFallback>

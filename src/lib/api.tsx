@@ -13,18 +13,15 @@ export const apiBase = axios.create({
 
 apiBase.interceptors.request.use(
   req => {
-    console.log('request sent');
     return req;
   },
   error => {
-    console.log(error);
     return Promise.reject(error);
   }
 );
 
 apiBase.interceptors.response.use(
   res => {
-    console.log('response received');
     return res;
   },
   error => {
