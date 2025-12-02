@@ -1,4 +1,5 @@
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -19,6 +20,7 @@ import {
 import { apiBase } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
+import { UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -39,7 +41,6 @@ type Invitation = {
 export default function InvitationsHistoryTab() {
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-  const [selectedInvite, setSelectedInvite] = useState<Invitation | null>(null);
 
   const { projectId } = useParams();
   const { data, isPending } = useQuery({
@@ -67,11 +68,17 @@ export default function InvitationsHistoryTab() {
   return (
     <div className="p-4 mt-4 space-y-6 border rounded-md">
       {/* Header */}
-      <div>
-        <h1 className="text-lg font-semibold">Invitations History</h1>
-        <p className="text-sm text-muted-foreground">
-          All invitations sent for this project.
-        </p>
+      <div className="flex justify-between">
+        <div>
+          <h1 className="text-lg font-semibold">Invitations History</h1>
+          <p className="text-sm text-fg-tertiary">
+            All invitations sent for this project.
+          </p>
+        </div>
+        <Button>
+          <UserPlus />
+          Invite
+        </Button>
       </div>
 
       {/* Search + Filters */}
