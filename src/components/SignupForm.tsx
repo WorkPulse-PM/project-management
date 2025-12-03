@@ -15,6 +15,7 @@ import React from 'react';
 
 type Props = {
   form: UseFormReturn<SignupFormValues>;
+  email?: string;
   isLoading: boolean;
   showPassword: boolean;
   togglePasswordVisibility: (e: React.MouseEvent) => void;
@@ -25,6 +26,7 @@ type Props = {
 };
 
 export function SignupForm({
+  email,
   form,
   isLoading,
   showPassword,
@@ -77,7 +79,14 @@ export function SignupForm({
                 <FormItem>
                   <FormLabel>Email Address</FormLabel>
                   <FormControl>
-                    <Input size="36" type="email" {...field} />
+                    <Input
+                      size="36"
+                      type="email"
+                      {...field}
+                      value={email || field.value}
+                      disabled={Boolean(email)}
+                      readOnly={Boolean(email)}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

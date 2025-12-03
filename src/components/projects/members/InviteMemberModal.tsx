@@ -75,7 +75,6 @@ export default function InviteMemberModal({
   });
 
   const onSubmit = async (values: InviteMemberFormValues) => {
-    console.log(values);
     await mutateAsync({
       email: values.email,
       roleId: values.role,

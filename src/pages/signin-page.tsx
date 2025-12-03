@@ -1,4 +1,7 @@
+import Logo from '@/components/Logo';
+import { InvitationBanner } from '@/components/auth/InvitationBanner';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Form,
   FormControl,
@@ -8,17 +11,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-
-import Logo from '@/components/Logo';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Spinner } from '@/components/ui/spinner';
+import { useInvitationDetails } from '@/hooks/useInvitationDetails';
 import { authClient } from '@/lib/authClient';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { z } from 'zod';
 
 const FormSchema = z
   .object({
@@ -61,17 +62,36 @@ export function SigninPage() {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('inviteToken');
+
+  const {
+    invitation,
+    isInvitationError,
+    isInvitationLoading,
+    invitationErrorMessage,
+  } = useInvitationDetails(inviteToken);
+
+  const inviteEmail = invitation?.email;
+  const email = searchParams.get('email') || inviteEmail || '';
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     mode: 'onSubmit',
     reValidateMode: 'onChange',
     defaultValues: {
-      email: searchParams.get('email') || '',
+      email,
       password: '',
       rememberMe: false,
     },
   });
+
+  useEffect(() => {
+    if (email) {
+      form.setValue('email', email);
+    }
+  }, [form, email]);
+
+  const isInviteFlow = Boolean(inviteToken);
   const onSubmit = async (payload: z.infer<typeof FormSchema>) => {
     try {
       setIsLoading(true);
@@ -93,9 +113,9 @@ export function SigninPage() {
   };
 
   return (
-    <div className="h-screen w-screen flex bg-bg">
-      <div className="flex w-full h-full justify-center items-center flex-1 p-5 bg-bg">
-        <div className=" w-100 flex flex-col gap-8">
+    <div className="min-h-screen w-full flex bg-bg">
+      <div className="flex w-full min-h-screen justify-center items-center flex-1 p-5 bg-bg">
+        <div className="w-100 flex flex-col gap-8">
           <div className="flex-1 flex flex-col gap-6">
             <div>
               <Logo />
@@ -109,6 +129,14 @@ export function SigninPage() {
                 </Button>
               </p>
             </div>
+            <InvitationBanner
+              show={isInviteFlow}
+              mode="signin"
+              invitation={invitation}
+              isLoading={isInvitationLoading}
+              isError={isInvitationError}
+              errorMessage={invitationErrorMessage}
+            />
           </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -121,7 +149,18 @@ export function SigninPage() {
                       <FormItem>
                         <FormLabel>Email Address</FormLabel>
                         <FormControl>
-                          <Input size="36" type="email" {...field} />
+                          <Input
+                            size="36"
+                            type="email"
+                            {...field}
+                            value={
+                              isInviteFlow && !isInvitationError
+                                ? inviteEmail
+                                : field.value
+                            }
+                            disabled={isInviteFlow && !isInvitationError}
+                            readOnly={isInviteFlow && !isInvitationError}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

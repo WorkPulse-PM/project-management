@@ -1,6 +1,7 @@
 import AppLayout from '@/AppLayout';
 import { ThemeProvider } from '@/components/theme-provider.tsx';
 import { ForgotpasswordPage } from '@/pages/forgot-password-page';
+import { InvitationAcceptPage } from '@/pages/invitation-accept-page';
 import { SigninPage } from '@/pages/signin-page.tsx';
 import { SignupPage } from '@/pages/signup-page';
 import { NotFoundPage } from '@/pages/not-found-page';
@@ -94,6 +95,10 @@ const router = createBrowserRouter([
             Component: ResetpasswordPage,
           },
         ],
+      },
+      {
+        path: 'invitations/accept',
+        Component: InvitationAcceptPage,
       },
       {
         path: '*',

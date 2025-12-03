@@ -1,10 +1,24 @@
 import Logo from '@/components/Logo';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import { SignupForm } from '@/components/SignupForm';
+import { Button } from '@/components/ui/button';
+import { InvitationBanner } from '@/components/auth/InvitationBanner';
+import { useInvitationDetails } from '@/hooks/useInvitationDetails';
 import { useSignup } from '@/hooks/useSignup';
+import { useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 export function SignupPage() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('inviteToken');
+
+  const {
+    invitation,
+    isInvitationError,
+    isInvitationLoading,
+    invitationErrorMessage,
+  } = useInvitationDetails(inviteToken);
+
   const {
     form,
     isLoading,
@@ -16,16 +30,36 @@ export function SignupPage() {
     onSubmit,
   } = useSignup();
 
+  const invitationEmail = invitation?.email;
+  const hasInviteToken = Boolean(inviteToken);
+  useEffect(() => {
+    if (invitationEmail) {
+      form.setValue('email', invitationEmail);
+    }
+  }, [form, invitationEmail]);
+
+  useEffect(() => {
+    if (
+      invitation &&
+      inviteToken &&
+      invitation.requiresRegistration === false
+    ) {
+      navigate(
+        `/auth/signin?email=${encodeURIComponent(invitation.email)}&inviteToken=${inviteToken}`,
+        { replace: true }
+      );
+    }
+  }, [invitation, inviteToken, navigate]);
+
   return (
-    <div className="h-screen w-screen flex justify-center items-center bg-bg px-5">
-      <div className="w-100 flex bg-bg">
+    <div className="min-h-screen w-full flex justify-center items-center bg-bg px-5 py-10">
+      <div className="w-full max-w-xl flex bg-bg">
         <div className="flex-1 flex flex-col gap-8">
-          <div className="flex-1 flex flex-col gap-6">
-            <div>
-              <Logo />
-            </div>
+          <div className="flex flex-col gap-6">
+            <Logo />
+
             <div className="flex gap-2 flex-col">
-              <h1 className=" heading-5">Sign Up</h1>
+              <h1 className="heading-5">Sign Up</h1>
               <p className="text-fg-secondary text-sm">
                 Already have an account?{' '}
                 <Button asChild variant="link" color="primary">
@@ -33,9 +67,19 @@ export function SignupPage() {
                 </Button>
               </p>
             </div>
+
+            <InvitationBanner
+              show={hasInviteToken}
+              mode="signup"
+              invitation={invitation}
+              isLoading={isInvitationLoading}
+              isError={isInvitationError}
+              errorMessage={invitationErrorMessage}
+            />
           </div>
 
           <SignupForm
+            email={invitationEmail}
             form={form}
             isLoading={isLoading}
             showPassword={showPassword}
