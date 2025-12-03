@@ -67,7 +67,7 @@ const columns: ColumnDef<Member>[] = [
   {
     header: 'User',
     accessorKey: 'user',
-    cell: ({ row, table, ...rest }) => {
+    cell: ({ row }) => {
       const userDetails = row.getValue('user') as Member['user'];
       return (
         <div className="flex items-center gap-3">
