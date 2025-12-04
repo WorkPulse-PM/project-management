@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/sidebar';
 import { authClient } from '@/lib/authClient';
 import { LayoutDashboard, LogOut, MailOpen } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -77,19 +77,23 @@ export default function AppSidebar() {
         <SidebarMenu>
           {!isPending && session?.user && (
             <SidebarMenuItem>
-              <SidebarMenuButton className="h-auto py-1">
-                <Avatar size="36">
-                  <AvatarImage src={session.user.image || undefined} />
-                  <AvatarFallback>
-                    {getInitials(session.user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col">
-                  <h4 className="font-semibold text-fg">{session.user.name}</h4>
-                  <span className="text-xs text-fg-secondary">
-                    @{session.user.username}
-                  </span>
-                </div>
+              <SidebarMenuButton className="h-auto py-1" asChild>
+                <Link to="/profile">
+                  <Avatar size="36">
+                    <AvatarImage src={session.user.image || undefined} />
+                    <AvatarFallback>
+                      {getInitials(session.user.name)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col text-left">
+                    <h4 className="font-semibold text-fg">
+                      {session.user.name}
+                    </h4>
+                    <span className="text-xs text-fg-secondary">
+                      @{session.user.username}
+                    </span>
+                  </div>
+                </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           )}
