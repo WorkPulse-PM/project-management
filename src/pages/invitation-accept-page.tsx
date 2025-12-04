@@ -7,22 +7,20 @@ import { authClient } from '@/lib/authClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { LogOut, Sparkles } from 'lucide-react';
 import { useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export function InvitationAcceptPage() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { token } = useParams();
   const queryClient = useQueryClient();
-
-  const inviteToken = searchParams.get('inviteToken');
 
   const {
     invitation,
     isInvitationError,
     isInvitationLoading,
     invitationErrorMessage,
-  } = useInvitationDetails(inviteToken);
+  } = useInvitationDetails(token);
 
   const { data: session, isPending: isSessionLoading } =
     authClient.useSession();
@@ -40,10 +38,10 @@ export function InvitationAcceptPage() {
   };
 
   const handleAcceptAsLoggedInUser = async () => {
-    if (!inviteToken || !invitation) return;
+    if (!token || !invitation) return;
     try {
       setIsAccepting(true);
-      await apiBase.get(`/invitations/${inviteToken}/accept`);
+      await apiBase.get(`/invitations/${token}/accept`);
       toast.success(
         'Invitation accepted! You now have access to this project.'
       );
@@ -59,32 +57,32 @@ export function InvitationAcceptPage() {
   };
 
   const handleSwitchAccount = async () => {
-    if (!inviteToken) return;
-
     queryClient.clear();
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          navigate(`/invitations/accept?inviteToken=${inviteToken}`, {
-            replace: true,
-          });
-        },
-      },
-    });
+    await authClient.signOut();
   };
 
   const showMismatchCard = emailsMismatch && !!invitation;
   const showLoggedInAcceptCard =
-    !isLoading &&
-    !!invitation &&
-    !!inviteToken &&
-    !!loggedInEmail &&
-    !emailsMismatch;
+    !isLoading && !!invitation && !!token && !!loggedInEmail && !emailsMismatch;
 
   const showContentCard =
-    !isInvitationLoading && (!!invitation || isInvitationError || !inviteToken);
+    !isInvitationLoading && (!!invitation || isInvitationError || !token);
 
-  if (!inviteToken) return <Navigate to="/auth/signin" replace />;
+  if (!token) return <Navigate to="/auth/signin" replace />;
+  if (isInvitationLoading)
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <Spinner />
+      </div>
+    );
+  if (!isSessionLoading && !session?.user) {
+    return (
+      <Navigate
+        to={`/auth/${invitation?.requiresRegistration ? 'signup' : 'signin'}?inviteToken=${token}`}
+        replace
+      />
+    );
+  }
 
   return (
     <div className="w-full flex justify-center items-center bg-bg px-5 py-10">
@@ -117,7 +115,7 @@ export function InvitationAcceptPage() {
             </div>
           )}
 
-          {showContentCard && inviteToken && (
+          {showContentCard && token && (
             <InvitationBanner
               show={true}
               mode={invitation?.requiresRegistration ? 'signup' : 'signin'}
@@ -128,7 +126,7 @@ export function InvitationAcceptPage() {
             />
           )}
 
-          {!inviteToken && !isLoading && (
+          {!token && !isLoading && (
             <div className="flex flex-col gap-3 rounded-lg border border-soft bg-fill2 p-4 text-sm">
               <p className="font-medium text-fg">
                 This invitation link is missing a token.

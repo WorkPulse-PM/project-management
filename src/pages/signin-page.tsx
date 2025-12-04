@@ -106,7 +106,7 @@ export function SigninPage() {
 
       const redirectUrl =
         isInviteFlow && !isInvitationError
-          ? `/invitations/accept?inviteToken=${inviteToken}`
+          ? `/invitations/${inviteToken}`
           : '/';
 
       await authClient.getSession();

@@ -27,16 +27,25 @@ const router = createBrowserRouter([
     Component: RootProvider,
     children: [
       {
+        path: 'invitations',
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/" replace />,
+          },
+          {
+            path: ':token',
+            Component: InvitationAcceptPage,
+          },
+        ],
+      },
+      {
         path: '/',
         Component: AppLayout,
         children: [
           {
             index: true,
             Component: DashboardPage,
-          },
-          {
-            path: 'invitations/accept',
-            Component: InvitationAcceptPage,
           },
           {
             path: 'projects',
