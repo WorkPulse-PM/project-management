@@ -1,9 +1,10 @@
 import { getBoardColor, getRingColor } from '@/lib/colorUtils';
+import type { BoardColumn } from '@/lib/types/projectTypes';
 import { useDroppable } from '@dnd-kit/core';
 import { BoardTask } from './BoardTask';
 import ColumnHeader from './ColumnHeader';
 
-export function Column({ column }) {
+export function Column({ column }: { column: BoardColumn }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
   return (

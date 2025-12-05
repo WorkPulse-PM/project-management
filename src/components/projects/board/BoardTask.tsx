@@ -4,7 +4,13 @@ import type { BoardTask } from '@/lib/types/projectTypes';
 import { useDraggable } from '@dnd-kit/core';
 import { Bookmark } from 'lucide-react';
 
-export function BoardTask({ task, columnName }) {
+export function BoardTask({
+  task,
+  columnName,
+}: {
+  task: BoardTask;
+  columnName: string;
+}) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
     useDraggable({
       id: task.id,
