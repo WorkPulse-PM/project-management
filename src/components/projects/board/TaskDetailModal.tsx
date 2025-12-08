@@ -1,42 +1,9 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
-import { apiBase } from '@/lib/api';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogBody,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { TextArea } from '@/components/ui/text-area';
-import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import TaskKeyBadge from '@/components/TaskKeyBadge';
+import Tiptap from '@/components/Tiptap/Tiptap';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { format } from 'date-fns';
-import {
-  CalendarIcon,
-  UserPlus,
-  Paperclip,
-  Bookmark,
-  Check,
-} from 'lucide-react';
-import useLookup from '@/hooks/useLookup';
 import AvatarGroup, { getInitials } from '@/components/ui/avatar-group';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Command,
   CommandEmpty,
@@ -45,7 +12,33 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
-import TaskKeyBadge from '@/components/TaskKeyBadge';
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import useLookup from '@/hooks/useLookup';
+import { apiBase } from '@/lib/api';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { format } from 'date-fns';
+import { CalendarIcon, Check, Paperclip, UserPlus } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 export type TaskDetail = {
   id: string;
@@ -429,7 +422,9 @@ export function TaskDetailModal({
                   <h3 className="text-sm font-medium text-fg-secondary">
                     Description
                   </h3>
-                  {isEditingDescription ? (
+
+                  <Tiptap />
+                  {/* {isEditingDescription ? (
                     <div className="flex flex-col gap-2">
                       <TextArea
                         value={descriptionValue}
@@ -474,7 +469,7 @@ export function TaskDetailModal({
                         </span>
                       )}
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Attachments Section */}
