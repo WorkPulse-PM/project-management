@@ -75,9 +75,9 @@ export function TaskDetailModal({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAssigneesOpen, setIsAssigneesOpen] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  // const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [titleValue, setTitleValue] = useState('');
-  const [descriptionValue, setDescriptionValue] = useState('');
+  // const [descriptionValue, setDescriptionValue] = useState('');
 
   // Fetch task details
   const { data: task, isLoading } = useQuery<TaskDetail>({
@@ -103,11 +103,11 @@ export function TaskDetailModal({
   }, [task, isEditingTitle]);
 
   // Update description when task loads
-  useEffect(() => {
-    if (task && !isEditingDescription) {
-      setDescriptionValue(task.description || '');
-    }
-  }, [task, isEditingDescription]);
+  // useEffect(() => {
+  //   if (task && !isEditingDescription) {
+  //     setDescriptionValue(task.description || '');
+  //   }
+  // }, [task, isEditingDescription]);
 
   // Mutation to update task
   const updateTaskMutation = useMutation({
@@ -131,7 +131,7 @@ export function TaskDetailModal({
         queryKey: ['projects', projectId, 'board'],
       });
       setIsEditingTitle(false);
-      setIsEditingDescription(false);
+      // setIsEditingDescription(false);
     },
   });
 
@@ -143,13 +143,13 @@ export function TaskDetailModal({
     }
   };
 
-  const handleDescriptionSave = () => {
-    if (task && descriptionValue !== (task.description || '')) {
-      updateTaskMutation.mutate({ description: descriptionValue });
-    } else {
-      setIsEditingDescription(false);
-    }
-  };
+  // const handleDescriptionSave = () => {
+  //   if (task && descriptionValue !== (task.description || '')) {
+  //     updateTaskMutation.mutate({ description: descriptionValue });
+  //   } else {
+  //     setIsEditingDescription(false);
+  //   }
+  // };
 
   const handleStatusChange = (statusId: string) => {
     updateTaskMutation.mutate({ statusId });
@@ -195,7 +195,7 @@ export function TaskDetailModal({
   useEffect(() => {
     if (!open) {
       setIsEditingTitle(false);
-      setIsEditingDescription(false);
+      // setIsEditingDescription(false);
     }
   }, [open]);
 
