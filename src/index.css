@@ -340,3 +340,7 @@
     /* Chrome, Safari and Opera */
   }
 }
+
+.tiptap.ProseMirror-focused {
+  @apply p-1;
+}
