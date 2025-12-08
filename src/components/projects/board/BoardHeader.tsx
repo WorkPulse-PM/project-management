@@ -48,7 +48,10 @@ export default function BoardHeader() {
               Create Task
             </Button>
           </DialogTrigger>
-          <DialogContent backdrop="overlay">
+          <DialogContent
+            className="max-w-4xl max-h-[90vh] overflow-y-auto gap-1 rounded-xl"
+            backdrop="overlay"
+          >
             <CreateTaskForm projectId={projectId!} />
           </DialogContent>
         </Dialog>

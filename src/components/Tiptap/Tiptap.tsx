@@ -1,15 +1,30 @@
 import { cn } from '@/lib/utils';
-import { EditorContent, EditorContext, useEditor } from '@tiptap/react';
+import {
+  EditorContent,
+  EditorContext,
+  useEditor,
+  type Content,
+  type EditorEvents,
+} from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import type { ClassValue } from 'clsx';
 import { useMemo } from 'react';
 import CustomBubbleMenu from './CustomBubbleMenu';
 
-const Tiptap = ({ classNames }: { classNames?: ClassValue }) => {
+const Tiptap = ({
+  classNames,
+  content,
+  onUpdate,
+}: {
+  classNames?: ClassValue;
+  content?: Content;
+  onUpdate?: (props: EditorEvents['update']) => void;
+}) => {
   const editor = useEditor({
     extensions: [StarterKit],
-    content: '<p>Hello World!</p>',
+    content,
+    onUpdate,
     editorProps: {
       attributes: {
         class: cn(

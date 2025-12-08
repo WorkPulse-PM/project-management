@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import { Divider } from '@/components/ui/divider';
 import {
   Form,
@@ -9,21 +10,20 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { TextArea } from '@/components/ui/text-area';
-import { Calendar } from '@/components/ui/calendar';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiBase } from '@/lib/api';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import Tiptap from '../Tiptap/Tiptap';
 
 export const FormSchema = z.object({
   title: z.string().trim().min(1, 'Task title is required'),
@@ -82,7 +82,7 @@ const CreateTaskForm = ({
 
   return (
     <div className="w-full">
-      <div className="max-w-md gap-6 p-4 mx-auto">
+      <div className="gap-6 p-4 mx-auto">
         <h2 className="text-2xl font-bold text-fg">Create New Task</h2>
         <Divider className="my-4" />
         <Form {...form}>
@@ -114,10 +114,10 @@ const CreateTaskForm = ({
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <TextArea
-                          placeholder="Create a responsive landing page with hero section and call-to-action."
-                          rows={4}
-                          {...field}
+                        <Tiptap
+                          onUpdate={({ editor }) =>
+                            field.onChange(editor.getHTML())
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -140,16 +140,16 @@ const CreateTaskForm = ({
                               type="button"
                               variant="outline"
                               color="neutral"
-                              className="text-fg hover:bg-elevation-level1 w-full justify-start gap-2"
+                              className="justify-start w-full gap-2 text-fg hover:bg-elevation-level1"
                             >
                               {field.value ? (
                                 format(field.value, 'PPP')
                               ) : (
-                                <span className="text-fg-tertiary text-sm font-normal">
+                                <span className="text-sm font-normal text-fg-tertiary">
                                   Pick a date
                                 </span>
                               )}
-                              <CalendarIcon className="text-fg-tertiary ml-auto size-4" />
+                              <CalendarIcon className="ml-auto text-fg-tertiary size-4" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>

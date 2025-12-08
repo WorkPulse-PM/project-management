@@ -223,9 +223,9 @@ export function TaskDetailModal({
               <p className="text-fg-secondary">Loading task details...</p>
             </div>
           ) : task ? (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               {/* Main Content Column (2/3 width) */}
-              <div className="lg:col-span-2 flex flex-col gap-2">
+              <div className="flex flex-col gap-2 lg:col-span-2">
                 {/* Title */}
                 <div className="flex flex-col gap-2">
                   {isEditingTitle ? (
@@ -248,7 +248,7 @@ export function TaskDetailModal({
                     </div>
                   ) : (
                     <h2
-                      className="text-lg font-semibold text-fg-primary cursor-text py-1 rounded-md"
+                      className="py-1 text-lg font-semibold rounded-md text-fg-primary cursor-text"
                       onClick={() => {
                         setTitleValue(task.title);
                         setIsEditingTitle(true);
@@ -258,10 +258,10 @@ export function TaskDetailModal({
                     </h2>
                   )}
                 </div>
-                <div className="sm:grid sm:grid-cols-3 gap-2 flex flex-col ">
+                <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 ">
                   {/* Status */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium text-fg-secondary uppercase">
+                    <label className="text-xs font-medium uppercase text-fg-secondary">
                       Status
                     </label>
                     <Select
@@ -273,7 +273,7 @@ export function TaskDetailModal({
                           <div className="flex items-center gap-2">
                             {task.status.color && (
                               <div
-                                className="size-3 rounded-full"
+                                className="rounded-full size-3"
                                 style={{ backgroundColor: task.status.color }}
                               />
                             )}
@@ -287,7 +287,7 @@ export function TaskDetailModal({
                             <div className="flex items-center gap-2">
                               {status.color && (
                                 <div
-                                  className="size-3 rounded-full"
+                                  className="rounded-full size-3"
                                   style={{ backgroundColor: status.color }}
                                 />
                               )}
@@ -301,7 +301,7 @@ export function TaskDetailModal({
 
                   {/* Due Date */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium text-fg-secondary uppercase">
+                    <label className="text-xs font-medium uppercase text-fg-secondary">
                       Due Date
                     </label>
                     <Popover
@@ -313,7 +313,7 @@ export function TaskDetailModal({
                           size="28"
                           variant="outline"
                           color="neutral"
-                          className="w-full justify-start gap-2"
+                          className="justify-start w-full gap-2"
                         >
                           <CalendarIcon className="size-4" />
                           {dueDate ? (
@@ -337,7 +337,7 @@ export function TaskDetailModal({
                   </div>
                   {/* Assignees */}
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium text-fg-secondary uppercase">
+                    <label className="text-xs font-medium uppercase text-fg-secondary">
                       Assignees
                     </label>
                     <div className="flex flex-col gap-2">
@@ -347,7 +347,7 @@ export function TaskDetailModal({
                       >
                         <PopoverTrigger asChild>
                           {assignedUserIds.length > 0 ? (
-                            <div className="hover:bg-gray-100 rounded-md cursor-pointer">
+                            <div className="rounded-md cursor-pointer hover:bg-gray-100">
                               <AvatarGroup avatars={task.assignees} />
                             </div>
                           ) : (
@@ -355,7 +355,7 @@ export function TaskDetailModal({
                               size="28"
                               variant="outline"
                               color="neutral"
-                              className="w-full justify-start gap-2"
+                              className="justify-start w-full gap-2"
                             >
                               <UserPlus className="size-4" />
                               Assign
@@ -399,7 +399,7 @@ export function TaskDetailModal({
                                           {getInitials(member.label)}
                                         </AvatarFallback>
                                       </Avatar>
-                                      <span className="text-sm text-fg-secondary flex-1">
+                                      <span className="flex-1 text-sm text-fg-secondary">
                                         {member.label}
                                       </span>
                                       {isAssigned && (
@@ -418,58 +418,12 @@ export function TaskDetailModal({
                 </div>
 
                 {/* Description */}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 mt-2">
                   <h3 className="text-sm font-medium text-fg-secondary">
                     Description
                   </h3>
 
-                  <Tiptap />
-                  {/* {isEditingDescription ? (
-                    <div className="flex flex-col gap-2">
-                      <TextArea
-                        value={descriptionValue}
-                        onChange={e => setDescriptionValue(e.target.value)}
-                        placeholder="Add a description..."
-                        rows={6}
-                        className="min-h-[120px]"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="32"
-                          variant="strong"
-                          color="primary"
-                          onClick={handleDescriptionSave}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          size="32"
-                          variant="ghost"
-                          color="neutral"
-                          onClick={() => {
-                            setDescriptionValue(task.description || '');
-                            setIsEditingDescription(false);
-                          }}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="min-h-[80px] p-3 rounded-md border border-border bg-elevation-level1 cursor-pointer hover:bg-fill2-alpha text-fg-secondary text-sm"
-                      onClick={() => {
-                        setDescriptionValue(task.description || '');
-                        setIsEditingDescription(true);
-                      }}
-                    >
-                      {task.description || (
-                        <span className="text-fg-tertiary italic">
-                          Add a description...
-                        </span>
-                      )}
-                    </div>
-                  )} */}
+                  <Tiptap content={task.description} />
                 </div>
 
                 {/* Attachments Section */}
@@ -488,14 +442,14 @@ export function TaskDetailModal({
                       Add Attachment
                     </Button>
                   </div>
-                  <div className="p-4 rounded-md border border-border bg-elevation-level1 text-sm text-fg-tertiary">
+                  <div className="p-4 text-sm border rounded-md border-border bg-elevation-level1 text-fg-tertiary">
                     No attachments yet
                   </div>
                 </div>
               </div>
 
               {/* Sidebar Column (1/3 width) */}
-              <div className="lg:col-span-1 flex flex-col gap-4">
+              <div className="flex flex-col gap-4 lg:col-span-1">
                 Audit logs
               </div>
             </div>
