@@ -35,9 +35,9 @@ import {
 import useLookup from '@/hooks/useLookup';
 import { apiBase } from '@/lib/api';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
+import { format, formatDate } from 'date-fns';
 import { CalendarIcon, Check, Paperclip, UserPlus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 export type TaskDetail = {
@@ -75,12 +75,10 @@ export function TaskDetailModal({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAssigneesOpen, setIsAssigneesOpen] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-  // const [isEditingDescription, setIsEditingDescription] = useState(false);
-  const [titleValue, setTitleValue] = useState('');
-  // const [descriptionValue, setDescriptionValue] = useState('');
 
   // Fetch task details
   const { data: task, isLoading } = useQuery<TaskDetail>({
+    staleTime: 1000 * 60 * 5, // 5 mins
     queryKey: ['tasks', projectId, taskId],
     queryFn: async () => {
       const response = await apiBase.get<TaskDetail>(
@@ -94,20 +92,6 @@ export function TaskDetailModal({
   // Fetch task statuses and project members
   const [taskStatuses] = useLookup('taskStatuses');
   const [projectMembers] = useLookup('projectMembers');
-
-  // Update title when task loads
-  useEffect(() => {
-    if (task && !isEditingTitle) {
-      setTitleValue(task.title);
-    }
-  }, [task, isEditingTitle]);
-
-  // Update description when task loads
-  // useEffect(() => {
-  //   if (task && !isEditingDescription) {
-  //     setDescriptionValue(task.description || '');
-  //   }
-  // }, [task, isEditingDescription]);
 
   // Mutation to update task
   const updateTaskMutation = useMutation({
@@ -130,43 +114,28 @@ export function TaskDetailModal({
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId, 'board'],
       });
-      setIsEditingTitle(false);
-      // setIsEditingDescription(false);
     },
   });
 
-  const handleTitleSave = () => {
-    if (task && titleValue !== task.title) {
-      updateTaskMutation.mutate({ title: titleValue });
-    } else {
-      setIsEditingTitle(false);
+  const saveFieldChange = (
+    field: 'title' | 'description' | 'statusId' | 'dueDate',
+    value: string
+  ) => {
+    const taskValues = {
+      title: task?.title,
+      description: task?.description,
+      statusId: task?.status?.id,
+      dueDate: task?.dueDate,
+    };
+
+    if (taskValues[field] !== value) {
+      updateTaskMutation.mutate({ [field]: value });
     }
-  };
-
-  // const handleDescriptionSave = () => {
-  //   if (task && descriptionValue !== (task.description || '')) {
-  //     updateTaskMutation.mutate({ description: descriptionValue });
-  //   } else {
-  //     setIsEditingDescription(false);
-  //   }
-  // };
-
-  const handleStatusChange = (statusId: string) => {
-    updateTaskMutation.mutate({ statusId });
   };
 
   const handleDueDateChange = (date: Date | undefined) => {
-    if (date) {
-      // Format as YYYY-MM-DD for the API
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      updateTaskMutation.mutate({
-        dueDate: `${year}-${month}-${day}`,
-      });
-    } else {
-      updateTaskMutation.mutate({ dueDate: null });
-    }
+    if (!date) return;
+    saveFieldChange('dueDate', formatDate(date, 'yyyy-MM-dd'));
     setIsCalendarOpen(false);
   };
 
@@ -191,33 +160,22 @@ export function TaskDetailModal({
     updateTaskMutation.mutate({ assigneeIds: newIds });
   };
 
-  // Reset editing states when modal closes
-  useEffect(() => {
-    if (!open) {
-      setIsEditingTitle(false);
-      // setIsEditingDescription(false);
-    }
-  }, [open]);
-
-  if (!task && !isLoading) return null;
-
   // Parse due date - handle both date string and Date object
   const dueDate = task?.dueDate
     ? new Date(task.dueDate) // Add time to avoid timezone issues
     : undefined;
 
+  if (!task && !isLoading) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="max-w-4xl max-h-[90vh] overflow-y-auto gap-1 rounded-xl"
-        backdrop="overlay"
-      >
+      <DialogContent className="max-w-4xl gap-1 rounded-xl" backdrop="overlay">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <TaskKeyBadge taskKey={task?.key} />
           </DialogTitle>
         </DialogHeader>
-        <DialogBody>
+        <DialogBody className="max-h-[90vh] min-h-[400px] overflow-auto no-scrollbar">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <p className="text-fg-secondary">Loading task details...</p>
@@ -231,14 +189,14 @@ export function TaskDetailModal({
                   {isEditingTitle ? (
                     <div className="flex gap-2">
                       <Input
-                        value={titleValue}
-                        onChange={e => setTitleValue(e.target.value)}
-                        onBlur={handleTitleSave}
+                        defaultValue={task.title}
+                        onBlur={e => {
+                          saveFieldChange('title', e.target.value);
+                          setIsEditingTitle(false);
+                        }}
                         onKeyDown={e => {
                           if (e.key === 'Enter') {
-                            handleTitleSave();
-                          } else if (e.key === 'Escape') {
-                            setTitleValue(task.title);
+                            saveFieldChange('title', e.currentTarget.value);
                             setIsEditingTitle(false);
                           }
                         }}
@@ -250,7 +208,6 @@ export function TaskDetailModal({
                     <h2
                       className="py-1 text-lg font-semibold rounded-md text-fg-primary cursor-text"
                       onClick={() => {
-                        setTitleValue(task.title);
                         setIsEditingTitle(true);
                       }}
                     >
@@ -266,7 +223,9 @@ export function TaskDetailModal({
                     </label>
                     <Select
                       value={task.status.id}
-                      onValueChange={handleStatusChange}
+                      onValueChange={value =>
+                        saveFieldChange('statusId', value)
+                      }
                     >
                       <SelectTrigger size="28">
                         <SelectValue>
@@ -330,7 +289,6 @@ export function TaskDetailModal({
                           mode="single"
                           selected={dueDate}
                           onSelect={handleDueDateChange}
-                          initialFocus
                         />
                       </PopoverContent>
                     </Popover>
@@ -418,12 +376,17 @@ export function TaskDetailModal({
                 </div>
 
                 {/* Description */}
-                <div className="flex flex-col gap-2 mt-2">
+                <div className="flex flex-col gap-2 mt-2 ">
                   <h3 className="text-sm font-medium text-fg-secondary">
                     Description
                   </h3>
 
-                  <Tiptap content={task.description} />
+                  <Tiptap
+                    content={task.description}
+                    onBlur={({ editor }) =>
+                      saveFieldChange('description', editor.getHTML())
+                    }
+                  />
                 </div>
 
                 {/* Attachments Section */}

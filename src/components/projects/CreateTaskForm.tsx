@@ -28,9 +28,7 @@ import Tiptap from '../Tiptap/Tiptap';
 export const FormSchema = z.object({
   title: z.string().trim().min(1, 'Task title is required'),
   description: z.string().optional(),
-  dueDate: z.date().refine(date => date !== undefined, {
-    message: 'Due date is required',
-  }),
+  dueDate: z.date().optional(),
 });
 
 export type CreateTaskFormValues = z.infer<typeof FormSchema>;
@@ -47,11 +45,7 @@ const CreateTaskForm = ({
 
   const createTaskMutation = useMutation({
     mutationFn: async (values: CreateTaskFormValues) => {
-      const payload = {
-        ...values,
-        dueDate: values.dueDate.toISOString(),
-      };
-      return await apiBase.post(`/projects/${projectId}/tasks`, payload);
+      return await apiBase.post(`/projects/${projectId}/tasks`, values);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({

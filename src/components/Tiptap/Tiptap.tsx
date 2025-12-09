@@ -3,8 +3,7 @@ import {
   EditorContent,
   EditorContext,
   useEditor,
-  type Content,
-  type EditorEvents,
+  type UseEditorOptions,
 } from '@tiptap/react';
 import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
@@ -14,17 +13,13 @@ import CustomBubbleMenu from './CustomBubbleMenu';
 
 const Tiptap = ({
   classNames,
-  content,
   onUpdate,
+  ...rest
 }: {
   classNames?: ClassValue;
-  content?: Content;
-  onUpdate?: (props: EditorEvents['update']) => void;
-}) => {
+} & UseEditorOptions) => {
   const editor = useEditor({
     extensions: [StarterKit],
-    content,
-    onUpdate,
     editorProps: {
       attributes: {
         class: cn(
@@ -33,6 +28,7 @@ const Tiptap = ({
         ),
       },
     },
+    ...rest,
   });
 
   const providerValue = useMemo(() => ({ editor }), [editor]);
