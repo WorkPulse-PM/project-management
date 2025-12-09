@@ -143,15 +143,17 @@ export default function ProjectBoard() {
           ) : null}
         </DragOverlay>
       </DndProvider>
-      <TaskDetailModal
-        taskId={selectedTaskId}
-        open={!!selectedTaskId}
-        onOpenChange={open => {
-          if (!open) {
-            setSelectedTaskId(null);
-          }
-        }}
-      />
+      {!!selectedTaskId && (
+        <TaskDetailModal
+          taskId={selectedTaskId}
+          open={!!selectedTaskId}
+          onOpenChange={open => {
+            if (!open) {
+              setSelectedTaskId(null);
+            }
+          }}
+        />
+      )}
     </>
   );
 }

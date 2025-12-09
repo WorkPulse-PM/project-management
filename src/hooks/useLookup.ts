@@ -11,6 +11,7 @@ export default function useLookup(key: string) {
   const { data, isFetching } = useQuery({
     queryKey: ['lookup', projectId, key],
     enabled: !!key,
+    staleTime: Infinity,
     queryFn: async () => {
       const response = await apiBase.get<LookupData<typeof key>>(
         `/lookups/${projectId}?keys=${key}`
