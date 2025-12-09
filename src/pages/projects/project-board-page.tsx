@@ -240,7 +240,7 @@ export default function ProjectBoardPage() {
             </div>
             <Dialog>
               <DialogTrigger asChild>
-                <Button>
+                <Button color="info" variant="glossy">
                   <PlusIcon />
                   Create Task
                 </Button>

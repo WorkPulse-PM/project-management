@@ -177,6 +177,7 @@ const CreateTaskForm = ({
               <Button
                 className="w-full"
                 type="submit"
+                variant="smooth"
                 loading={createTaskMutation.isPending}
                 disabled={createTaskMutation.isPending}
               >

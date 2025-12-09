@@ -87,8 +87,8 @@ export default function InviteMemberModal({
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
               <div className="flex gap-3">
-                <div className="flex items-center justify-start p-3 border rounded-lg border-soft-alpha size-fit">
-                  <UserPlus className="text-fg2 size-6" />
+                <div className="flex items-center justify-start p-3 border rounded-full border-soft-alpha size-fit">
+                  <UserPlus className="text-fg2 size-5" />
                 </div>
                 <div>
                   <DialogTitle>Invite</DialogTitle>
