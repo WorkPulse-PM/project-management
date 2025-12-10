@@ -78,7 +78,7 @@ export function TaskDetailModal({
 
   // Fetch task details
   const { data: task, isLoading } = useQuery<TaskDetail>({
-    staleTime: 1000 * 60 * 5, // 5 mins
+    // staleTime: 1000 * 60 * 5, // 5 mins
     queryKey: ['tasks', projectId, taskId],
     queryFn: async () => {
       const response = await apiBase.get<TaskDetail>(
@@ -413,7 +413,7 @@ export function TaskDetailModal({
 
               {/* Sidebar Column (1/3 width) */}
               <div className="flex flex-col gap-4 lg:col-span-1">
-                Audit logs
+                Activities
               </div>
             </div>
           ) : null}

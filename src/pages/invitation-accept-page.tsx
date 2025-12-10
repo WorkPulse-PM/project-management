@@ -45,6 +45,9 @@ export function InvitationAcceptPage() {
       toast.success(
         'Invitation accepted! You now have access to this project.'
       );
+      await queryClient.invalidateQueries({
+        queryKey: ['projects', 'list'],
+      });
       navigate('/', { replace: true });
     } catch (error: any) {
       const message =
@@ -71,7 +74,7 @@ export function InvitationAcceptPage() {
   if (!token) return <Navigate to="/auth/signin" replace />;
   if (isInvitationLoading)
     return (
-      <div className="w-full h-screen flex justify-center items-center">
+      <div className="flex items-center justify-center w-full h-screen">
         <Spinner />
       </div>
     );
@@ -85,11 +88,11 @@ export function InvitationAcceptPage() {
   }
 
   return (
-    <div className="w-full flex justify-center items-center bg-bg px-5 py-10">
+    <div className="flex items-center justify-center w-full px-5 py-10 bg-bg">
       <div className="w-full max-w-xl">
-        <div className="flex flex-col gap-6 rounded-2xl border border-soft bg-elevated p-6 shadow-soft">
+        <div className="flex flex-col gap-6 p-6 border rounded-2xl border-soft bg-elevated shadow-soft">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary-accent text-primary">
+            <div className="flex items-center justify-center rounded-full h-11 w-11 bg-primary-accent text-primary">
               <Sparkles className="size-5" />
             </div>
             <div className="flex flex-col">
@@ -108,7 +111,7 @@ export function InvitationAcceptPage() {
           {isLoading && (
             <div className="flex flex-col items-center justify-center gap-3 py-10">
               <Spinner />
-              <p className="text-sm text-fg-secondary text-center">
+              <p className="text-sm text-center text-fg-secondary">
                 We&apos;re checking your invitation and account status. Just a
                 moment.
               </p>
@@ -127,7 +130,7 @@ export function InvitationAcceptPage() {
           )}
 
           {!token && !isLoading && (
-            <div className="flex flex-col gap-3 rounded-lg border border-soft bg-fill2 p-4 text-sm">
+            <div className="flex flex-col gap-3 p-4 text-sm border rounded-lg border-soft bg-fill2">
               <p className="font-medium text-fg">
                 This invitation link is missing a token.
               </p>
@@ -147,7 +150,7 @@ export function InvitationAcceptPage() {
           )}
 
           {showMismatchCard && (
-            <div className="flex flex-col gap-3 rounded-lg border border-soft bg-fill2 p-4 text-sm">
+            <div className="flex flex-col gap-3 p-4 text-sm border rounded-lg border-soft bg-fill2">
               <p className="font-medium text-fg">
                 You&apos;re signed in as a different user.
               </p>
@@ -169,7 +172,7 @@ export function InvitationAcceptPage() {
                 </Button>
                 <Button
                   color="primary"
-                  className="inline-flex items-center gap-2 order-1 sm:order-2"
+                  className="inline-flex items-center order-1 gap-2 sm:order-2"
                   onClick={handleSwitchAccount}
                 >
                   <LogOut className="size-4" />
@@ -180,7 +183,7 @@ export function InvitationAcceptPage() {
           )}
 
           {showLoggedInAcceptCard && (
-            <div className="flex flex-col gap-3 rounded-lg border border-soft bg-fill2 p-4 text-sm">
+            <div className="flex flex-col gap-3 p-4 text-sm border rounded-lg border-soft bg-fill2">
               <p className="font-medium text-fg">
                 You&apos;re all set to join this project.
               </p>
@@ -190,7 +193,7 @@ export function InvitationAcceptPage() {
                 matches the email this invitation was sent to. When you&apos;re
                 ready, accept the invite below to get access.
               </p>
-              <div className="flex flex-wrap gap-2 pt-1 justify-end">
+              <div className="flex flex-wrap justify-end gap-2 pt-1">
                 <Button
                   color="primary"
                   className="inline-flex items-center gap-2"

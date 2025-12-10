@@ -13,7 +13,6 @@ import CustomBubbleMenu from './CustomBubbleMenu';
 
 const Tiptap = ({
   classNames,
-  onUpdate,
   ...rest
 }: {
   classNames?: ClassValue;

@@ -21,7 +21,9 @@ import SettingsPage from './pages/settings-page';
 import CreateProjectPage from './pages/projects/create-project-page';
 import ProjectBoardPage from './pages/projects/project-board-page';
 import MembersPage from './pages/projects/members/members-page';
-import ProfilePage from './pages/profile-page';
+import { lazy } from 'react';
+
+const ProfilePage = lazy(() => import('./pages/profile-page'));
 
 const router = createBrowserRouter([
   {

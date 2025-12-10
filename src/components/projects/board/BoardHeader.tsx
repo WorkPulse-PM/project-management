@@ -16,7 +16,7 @@ export default function BoardHeader() {
     enabled: !!projectId,
     select: res => res.data,
     queryKey: ['projects', projectId],
-    staleTime: 1000 * 60 * 60, // 1 hour
+    // staleTime: 1000 * 60 * 60, // 1 hour
     queryFn: async () => {
       const data = await apiBase.get<Project>(`/projects/${projectId}`);
       return data;

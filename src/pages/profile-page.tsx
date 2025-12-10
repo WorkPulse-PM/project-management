@@ -1,4 +1,5 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getInitials } from '@/components/ui/avatar-group';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -9,13 +10,12 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { getInitials } from '@/components/ui/avatar-group';
-import { authClient } from '@/lib/authClient';
-import { Camera, Loader2 } from 'lucide-react';
-import { useState, useRef } from 'react';
-import { toast } from 'sonner';
-import axios from 'axios';
 import { apiBase } from '@/lib/api';
+import { authClient } from '@/lib/authClient';
+import axios from 'axios';
+import { Camera, Loader2 } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function ProfilePage() {
   const { data: session, isPending } = authClient.useSession();
@@ -34,44 +34,51 @@ export default function ProfilePage() {
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be less than 5MB');
-      return;
-    }
-
-    setIsUploading(true);
     try {
-      // 1. Get presigned URL
-      const { data: presignedData } = await apiBase.get(`/files/presigned-url`);
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-      const { url, key } = presignedData;
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please upload an image file');
+        return;
+      }
 
-      // 2. Upload file to S3
-      await axios.put(url, file, {
-        headers: {
-          'Content-Type': file.type,
-        },
-      });
+      const options = {
+        maxSizeMB: 0.2,
+        maxWidthOrHeight: 600,
+        useWebWorker: true,
+      };
 
-      // 3. Update user profile
-      await authClient.updateUser({
-        image: key,
-      });
+      try {
+        setIsUploading(true);
+        const imageCompression = (await import('browser-image-compression'))
+          .default;
+        const [compressedFile, { data: presignedData }] = await Promise.all([
+          imageCompression(file, options),
+          apiBase.get(`/files/presigned-url`),
+        ]);
 
-      toast.success('Profile picture updated');
-    } catch (error) {
-      console.error('Upload error:', error);
-      toast.error('Failed to upload profile picture');
+        const { url, key } = presignedData;
+
+        await axios.put(url, compressedFile, {
+          headers: {
+            'Content-Type': compressedFile.type,
+          },
+        });
+
+        await authClient.updateUser({
+          image: key,
+        });
+
+        toast.success('Profile picture updated');
+      } catch (error) {
+        console.error(error);
+        toast.error('Failed to upload profile picture');
+      } finally {
+        setIsUploading(false);
+      }
     } finally {
-      setIsUploading(false);
+      e.target.value = '';
     }
   };
 
@@ -132,7 +139,7 @@ export default function ProfilePage() {
                   <AvatarFallback className="text-xl">
                     {getInitials(session.user.name)}
                   </AvatarFallback>
-                  <div className="absolute inset-0 flex items-center justify-center transition-opacity bg-black/50 rounded-full opacity-0 group-hover:opacity-100">
+                  <div className="absolute inset-0 flex items-center justify-center transition-opacity rounded-full opacity-0 bg-black/50 group-hover:opacity-100">
                     <Camera className="w-8 h-8 text-white" />
                   </div>
                 </Avatar>
@@ -144,7 +151,7 @@ export default function ProfilePage() {
                   onChange={handleFileChange}
                 />
                 {isUploading && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-full">
+                  <div className="absolute inset-0 flex items-center justify-center rounded-full bg-background/80">
                     <Loader2 className="w-8 h-8 animate-spin" />
                   </div>
                 )}
