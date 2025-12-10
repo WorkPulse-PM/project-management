@@ -46,7 +46,7 @@ export default function AvatarGroup({
           className={cn('border-bg border-4 hover:z-10', rest.className)}
           key={person.name || person.image}
         >
-          <AvatarImage src={person.image} />
+          <AvatarImage src={person.image || undefined} />
           <AvatarFallback {...avatarFallbackProps}>
             {getInitials(person.name)}
           </AvatarFallback>

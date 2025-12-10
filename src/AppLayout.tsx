@@ -70,7 +70,13 @@ const AppLayout = () => {
   };
 
   if (isPending) return <DashboardLoading />;
-  if (!data) return <Navigate to={'/auth/signin'} replace />;
+  if (!data)
+    return (
+      <Navigate
+        to={{ pathname: '/auth/signin', search: location.search }}
+        replace
+      />
+    );
 
   return (
     <SidebarProvider>

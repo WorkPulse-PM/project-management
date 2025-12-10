@@ -1,4 +1,4 @@
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AvatarGroup, { getInitials } from '@/components/ui/avatar-group';
 import { IconButton } from '@/components/ui/button';
 import {
@@ -9,22 +9,28 @@ import {
 import type { ProjectCardProps } from '@/lib/types/projectTypes';
 import { formatDate } from 'date-fns';
 import { CalendarIcon, MoreVertical } from 'lucide-react';
+import { Badge } from '../ui/badge';
 
 export default function ProjectCard(props: ProjectCardProps) {
-  const { name, description, createdAt, members } = props;
+  const { name, description, createdAt, members, image, projectKey } = props;
   const formattedCreatedAt = createdAt
     ? formatDate(createdAt, 'MMM dd, yyyy')
     : null;
+
   return (
     <div className="flex flex-col w-full h-full gap-3 p-4 transition-colors border rounded-md cursor-pointer bg-elevation-level1 hover:border-primary-border">
-      <div className="flex items-center gap-2">
+      <div className="flex items-start gap-2">
         <Avatar size="36">
+          <AvatarImage src={image || undefined} />
           <AvatarFallback>{getInitials(name)}</AvatarFallback>
         </Avatar>
-        <div className="flex flex-col flex-1">
-          <h3 className="overflow-hidden font-medium text-ellipsis text-md text-fg-primary whitespace-nowrap">
+        <div className="flex flex-col gap-1 flex-1">
+          <h3 className="overflow-hidden font-medium text-ellipsis text-md text-fg-primary leading-5 line-clamp-2">
             {name}
           </h3>
+          <Badge size={'20'} variant={'soft'}>
+            {projectKey}
+          </Badge>
         </div>
         <IconButton variant={'ghost'} color={'neutral'} size={'28'}>
           <MoreVertical />

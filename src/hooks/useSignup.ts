@@ -1,11 +1,12 @@
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { authClient } from '@/lib/authClient';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
-import { z } from 'zod';
+import { EyeIcon, EyeOffIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { EyeIcon, EyeOffIcon } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { toast } from 'sonner';
+import { z } from 'zod';
 
 export const FormSchema = z
   .object({
@@ -47,6 +48,8 @@ export const FormSchema = z
 export type SignupFormValues = z.infer<typeof FormSchema>;
 
 export function useSignup() {
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('inviteToken');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isUsernameAvailable, setIsUsernameAvailable] = useState<
@@ -82,12 +85,14 @@ export function useSignup() {
   const onSubmit = async (payload: SignupFormValues) => {
     try {
       setIsLoading(true);
+
+      const callbackURL =
+        import.meta.env.VITE_FRONTEND_URL +
+        (inviteToken ? `/invitations/${inviteToken}` : '/');
+
       const { error } = await authClient.signUp.email({
         ...payload,
-        callbackURL:
-          import.meta.env.VITE_FRONTEND_URL +
-          '/auth/signin?email=' +
-          payload.email,
+        callbackURL,
       });
       if (error) {
         toast.error(error.message || 'Something went wrong! Please try again');

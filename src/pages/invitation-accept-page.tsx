@@ -1,28 +1,26 @@
 import { InvitationBanner } from '@/components/auth/InvitationBanner';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { authClient } from '@/lib/authClient';
-import { apiBase } from '@/lib/api';
 import { useInvitationDetails } from '@/hooks/useInvitationDetails';
+import { apiBase } from '@/lib/api';
+import { authClient } from '@/lib/authClient';
 import { useQueryClient } from '@tanstack/react-query';
 import { LogOut, Sparkles } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useState } from 'react';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export function InvitationAcceptPage() {
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { token } = useParams();
   const queryClient = useQueryClient();
-
-  const inviteToken = searchParams.get('inviteToken');
 
   const {
     invitation,
     isInvitationError,
     isInvitationLoading,
     invitationErrorMessage,
-  } = useInvitationDetails(inviteToken);
+  } = useInvitationDetails(token);
 
   const { data: session, isPending: isSessionLoading } =
     authClient.useSession();
@@ -35,46 +33,15 @@ export function InvitationAcceptPage() {
   const emailsMismatch =
     !!loggedInEmail && !!inviteEmail && loggedInEmail !== inviteEmail;
 
-  useEffect(() => {
-    if (!inviteToken) {
-      navigate('/auth/signin', { replace: true });
-    }
-  }, [inviteToken, navigate]);
-
-  useEffect(() => {
-    // If user is NOT logged in but the invite is valid and there is no mismatch,
-    // guide them straight into the correct auth flow.
-    if (
-      !isLoading &&
-      !loggedInEmail &&
-      invitation &&
-      inviteToken &&
-      !emailsMismatch
-    ) {
-      const target = invitation.requiresRegistration
-        ? `/auth/signup?inviteToken=${inviteToken}`
-        : `/auth/signin?inviteToken=${inviteToken}`;
-
-      navigate(target, { replace: true });
-    }
-  }, [
-    loggedInEmail,
-    emailsMismatch,
-    invitation,
-    inviteToken,
-    isLoading,
-    navigate,
-  ]);
-
   const handleContinueAsCurrentUser = () => {
     navigate('/', { replace: true });
   };
 
   const handleAcceptAsLoggedInUser = async () => {
-    if (!inviteToken || !invitation) return;
+    if (!token || !invitation) return;
     try {
       setIsAccepting(true);
-      await apiBase.get(`/invitations/${inviteToken}/accept`);
+      await apiBase.get(`/invitations/${token}/accept`);
       toast.success(
         'Invitation accepted! You now have access to this project.'
       );
@@ -90,33 +57,35 @@ export function InvitationAcceptPage() {
   };
 
   const handleSwitchAccount = async () => {
-    if (!inviteToken) return;
-
     queryClient.clear();
-    await authClient.signOut({
-      fetchOptions: {
-        onSuccess: () => {
-          navigate(`/invitations/accept?inviteToken=${inviteToken}`, {
-            replace: true,
-          });
-        },
-      },
-    });
+    await authClient.signOut();
   };
 
   const showMismatchCard = emailsMismatch && !!invitation;
   const showLoggedInAcceptCard =
-    !isLoading &&
-    !!invitation &&
-    !!inviteToken &&
-    !!loggedInEmail &&
-    !emailsMismatch;
+    !isLoading && !!invitation && !!token && !!loggedInEmail && !emailsMismatch;
 
   const showContentCard =
-    !isInvitationLoading && (!!invitation || isInvitationError || !inviteToken);
+    !isInvitationLoading && (!!invitation || isInvitationError || !token);
+
+  if (!token) return <Navigate to="/auth/signin" replace />;
+  if (isInvitationLoading)
+    return (
+      <div className="w-full h-screen flex justify-center items-center">
+        <Spinner />
+      </div>
+    );
+  if (!isSessionLoading && !session?.user) {
+    return (
+      <Navigate
+        to={`/auth/${invitation?.requiresRegistration ? 'signup' : 'signin'}?inviteToken=${token}`}
+        replace
+      />
+    );
+  }
 
   return (
-    <div className="min-h-screen w-full flex justify-center items-center bg-bg px-5 py-10">
+    <div className="w-full flex justify-center items-center bg-bg px-5 py-10">
       <div className="w-full max-w-xl">
         <div className="flex flex-col gap-6 rounded-2xl border border-soft bg-elevated p-6 shadow-soft">
           <div className="flex items-center gap-3">
@@ -146,7 +115,7 @@ export function InvitationAcceptPage() {
             </div>
           )}
 
-          {showContentCard && inviteToken && (
+          {showContentCard && token && (
             <InvitationBanner
               show={true}
               mode={invitation?.requiresRegistration ? 'signup' : 'signin'}
@@ -157,7 +126,7 @@ export function InvitationAcceptPage() {
             />
           )}
 
-          {!inviteToken && !isLoading && (
+          {!token && !isLoading && (
             <div className="flex flex-col gap-3 rounded-lg border border-soft bg-fill2 p-4 text-sm">
               <p className="font-medium text-fg">
                 This invitation link is missing a token.

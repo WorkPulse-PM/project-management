@@ -21,11 +21,25 @@ import SettingsPage from './pages/settings-page';
 import CreateProjectPage from './pages/projects/create-project-page';
 import ProjectBoardPage from './pages/projects/project-board-page';
 import MembersPage from './pages/projects/members/members-page';
+import ProfilePage from './pages/profile-page';
 
 const router = createBrowserRouter([
   {
     Component: RootProvider,
     children: [
+      {
+        path: 'invitations',
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/" replace />,
+          },
+          {
+            path: ':token',
+            Component: InvitationAcceptPage,
+          },
+        ],
+      },
       {
         path: '/',
         Component: AppLayout,
@@ -68,6 +82,10 @@ const router = createBrowserRouter([
             path: '/settings',
             Component: SettingsPage,
           },
+          {
+            path: '/profile',
+            Component: ProfilePage,
+          },
         ],
       },
       {
@@ -95,10 +113,6 @@ const router = createBrowserRouter([
             Component: ResetpasswordPage,
           },
         ],
-      },
-      {
-        path: 'invitations/accept',
-        Component: InvitationAcceptPage,
       },
       {
         path: '*',

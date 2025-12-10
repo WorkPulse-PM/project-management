@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@plugin '@tailwindcss/typography';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -338,4 +339,8 @@
     display: none;
     /* Chrome, Safari and Opera */
   }
+}
+
+.tiptap.ProseMirror-focused {
+  @apply p-1 max-h-[500px] overflow-y-auto mx-1 outline-1 rounded-md outline-fg-tertiary/60 scroll-p-32 no-scrollbar;
 }

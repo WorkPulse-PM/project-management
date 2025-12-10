@@ -3,6 +3,8 @@ export type Project = {
   name: string;
   description: string;
   createdAt: string;
+  image: string | null;
+  key: string;
   members: ProjectMember[];
 };
 
@@ -10,10 +12,12 @@ export type ProjectCardType = Project;
 
 export type ProjectCardProps = Pick<
   ProjectCardType,
-  'id' | 'name' | 'description' | 'createdAt' | 'members'
->;
+  'id' | 'name' | 'description' | 'createdAt' | 'members' | 'image'
+> & {
+  projectKey: string;
+};
 
-export type ProjectMember = { name: string; image: string };
+export type ProjectMember = { name: string; image: string | null };
 
 export type BoardColumn = {
   id: string;
@@ -26,6 +30,7 @@ export type BoardColumn = {
 export type BoardTask = {
   id: string;
   title: string;
+  key: string;
   dueDate: string;
   status: TaskStatus;
 };

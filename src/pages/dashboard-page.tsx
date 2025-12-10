@@ -16,6 +16,7 @@ const DashboardPage = () => {
       return res.data;
     },
   });
+
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-col items-start justify-between gap-y-4 sm:flex-row">
@@ -36,7 +37,7 @@ const DashboardPage = () => {
         ) : (
           data?.map(project => (
             <Link to={`/projects/${project.id}`}>
-              <ProjectCard {...project} />
+              <ProjectCard {...project} projectKey={project.key} />
             </Link>
           ))
         )}

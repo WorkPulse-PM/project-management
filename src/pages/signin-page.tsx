@@ -104,7 +104,14 @@ export function SigninPage() {
         return;
       }
 
-      navigate('/', {
+      const redirectUrl =
+        isInviteFlow && !isInvitationError
+          ? `/invitations/${inviteToken}`
+          : '/';
+
+      await authClient.getSession();
+
+      navigate(redirectUrl, {
         replace: true,
       });
     } finally {
