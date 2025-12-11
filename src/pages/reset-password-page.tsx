@@ -16,6 +16,10 @@ import { CircleCheck, EyeIcon, EyeOffIcon } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Input, InputWrapper } from '@/components/ui/input';
 import Logo from '@/components/Logo';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { authClient } from '@/lib/authClient';
+import { useNavigate } from 'react-router-dom';
 
 const FormSchema = z
   .object({
@@ -40,8 +44,6 @@ const passwordSchema = z
   .regex(/[A-Z]/, { message: 'At least one uppercase letter' });
 
 export function ResetpasswordPage() {
-  const [isLoading, setIsLoading] = useState(false);
-
   const [showPassword, setShowPassword] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -50,6 +52,8 @@ export function ResetpasswordPage() {
     e.stopPropagation();
     setShowPassword(!showPassword);
   }
+
+  const navigate = useNavigate();
 
   const IconComponent = showPassword ? EyeOffIcon : EyeIcon;
 
@@ -81,14 +85,51 @@ export function ResetpasswordPage() {
 
   const isValid = (message: string) => !errors.includes(message);
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
-    console.log(data);
-    setIsLoading(true);
-
-    setTimeout(() => {
-      setIsLoading(false);
+  // -----------------------------
+  // 🔥 TANSTACK QUERY MUTATION
+  // -----------------------------
+  const resetPasswordMutation = useMutation({
+    mutationFn: async ({
+      token,
+      password,
+    }: {
+      token: string;
+      password: string;
+    }) => {
+      // 🔥 Use authClient instead of apiBase
+      const res = await authClient.resetPassword({
+        newPassword: password,
+        token,
+      });
+      return res;
+    },
+    onSuccess: () => {
+      toast.success('Password reset successfully!');
       form.reset();
-    }, 2000);
+      navigate('/auth/signin');
+      // Optional: redirect to login
+      // window.location.href = '/auth/login';
+    },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to reset password');
+    },
+  });
+
+  // -----------------------------
+  // 🔥 FORM SUBMIT LOGIC
+  // -----------------------------
+  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+    const token = new URLSearchParams(window.location.search).get('token');
+
+    if (!token) {
+      toast.error('Invalid or expired reset link');
+      return;
+    }
+
+    resetPasswordMutation.mutate({
+      token,
+      password: data.password,
+    });
   };
 
   return (
@@ -106,9 +147,11 @@ export function ResetpasswordPage() {
               </p>
             </div>
           </div>
+
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <div className="flex gap-4 flex-col">
+                {/* PASSWORD FIELD */}
                 <FormField
                   control={form.control}
                   name="password"
@@ -134,6 +177,8 @@ export function ResetpasswordPage() {
                     </FormItem>
                   )}
                 />
+
+                {/* CONFIRM PASSWORD FIELD */}
                 <FormField
                   control={form.control}
                   name="confirmPassword"
@@ -156,6 +201,8 @@ export function ResetpasswordPage() {
                             />
                           </InputWrapper>
                         </FormControl>
+
+                        {/* PASSWORD VALIDITY UI */}
                         <div className="body-13 flex w-full flex-col gap-1.5">
                           <Progress value={progress} />
                           <p className="text-sm font-semibold">
@@ -181,12 +228,23 @@ export function ResetpasswordPage() {
                           ))}
                         </div>
                       </div>
+
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button className="w-full" type="submit" disabled={isLoading}>
-                  {isLoading ? <Spinner variant="default" /> : 'Reset password'}
+
+                {/* SUBMIT BUTTON */}
+                <Button
+                  className="w-full"
+                  type="submit"
+                  disabled={resetPasswordMutation.isPending}
+                >
+                  {resetPasswordMutation.isPending ? (
+                    <Spinner variant="default" />
+                  ) : (
+                    'Reset password'
+                  )}
                 </Button>
               </div>
             </form>
