@@ -17,46 +17,7 @@ import {
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { getInitials } from '../ui/avatar-group';
-
-const getNotificationMessage = (notification: Notification): string => {
-  const { type, payload, actor, task } = notification;
-
-  switch (type) {
-    case 'TASK_ASSIGNED':
-      return `${actor?.name} assigned you to "${task?.title}"`;
-    case 'TASK_UNASSIGNED':
-      return `${actor?.name} unassigned you from "${task?.title}"`;
-    //   case 'TASK_COMMENT_ADDED':
-    //     return `${actor?.name} commented on "${task?.title}": ${payload.commentPreview}`;
-    //   case 'PROJECT_INVITATION_RECEIVED':
-    //     return `${actor?.name} invited you to join "${payload.projectName}"`;
-    case 'TASK_STATUS_CHANGED':
-      return `${actor?.name} changed the status of "${task?.title}".`;
-    case 'TASK_DUE_DATE_CHANGED':
-      const oldDate = payload?.old
-        ? formatDate(payload.old as string, 'MMM d, yyyy')
-        : null;
-      const newDate = payload?.new
-        ? formatDate(payload.new as string, 'MMM d, yyyy')
-        : null;
-
-      if (oldDate && !newDate) {
-        return `${actor?.name} removed the due date of "${task?.title}".`;
-      }
-      return `${actor?.name} changed the due date of "${task?.title}" ${oldDate ? `from ${oldDate}` : ''} to ${newDate || 'no due date'}.`;
-    case 'TASK_UPDATED':
-      return `${actor?.name} updated the ${payload.field} for "${task?.title}"`;
-
-    //   case 'MEMBER_ADDED':
-    //     return `${payload.memberName} joined "${payload.projectName}"`;
-    //   case 'TASK_CREATED':
-    //     return `${payload.createdBy} created "${task?.title}" in ${payload.projectName}`;
-    //   case 'SYSTEM':
-    //     return payload.message as string;
-    default:
-      return 'You have a new notification';
-  }
-};
+import NotificationMessage from './NotificationMessage';
 
 type Props = {
   isOpen: boolean;
@@ -146,8 +107,8 @@ export default function NotificationBox({ isOpen }: Props) {
               <div
                 key={notification.id}
                 className={cn(
-                  'group relative p-3 transition-all duration-200 hover:bg-fill1 flex',
-                  isUnread && 'border-l-3 border-l-primary'
+                  'group relative p-3 transition-all duration-200 hover:bg-fill1 flex border-l-3 border-l-transparent',
+                  isUnread && ' border-l-primary'
                 )}
               >
                 <div className="flex gap-3">
@@ -181,9 +142,9 @@ export default function NotificationBox({ isOpen }: Props) {
                         {title}
                       </h4>
                     </div>
-                    <p className="text-sm text-fg-secondary line-clamp-2 mb-2">
-                      {getNotificationMessage(notification)}
-                    </p>
+                    <div className="text-sm text-fg-secondary line-clamp-2 mb-2">
+                      <NotificationMessage notification={notification} />
+                    </div>
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-fg-tertiary">
                         {formatDistanceToNow(notification.createdAt, {
