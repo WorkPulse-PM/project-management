@@ -6,7 +6,7 @@ export default function NotificationMessage({
 }: {
   notification: Notification;
 }) {
-  const { type, payload, actor, task } = notification;
+  const { type, payload, actor, task, project } = notification;
 
   switch (type) {
     case 'TASK_ASSIGNED':
@@ -56,6 +56,12 @@ export default function NotificationMessage({
       return (
         <>
           {actor?.name} updated the {payload.field} for <b>{task?.title}</b>.
+        </>
+      );
+    case 'PROJECT_INVITATION_RECEIVED':
+      return (
+        <>
+          {actor?.name} invited you to join <b>{project?.name}</b>.
         </>
       );
 

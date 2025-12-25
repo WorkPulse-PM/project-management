@@ -1,5 +1,6 @@
 import type { TaskDetail } from '@/components/projects/board/TaskDetailModal';
 import type { User } from 'better-auth';
+import type { Project } from './projectTypes';
 
 export const NotificationType = {
   TASK_CREATED: 'TASK_CREATED',
@@ -45,6 +46,7 @@ export interface Notification {
   type: NotificationType;
   entity: NotificationEntity;
   task: Pick<TaskDetail, 'id' | 'title' | 'key'> | null;
+  project: Pick<Project, 'id' | 'name' | 'image'> | null;
   payload: Record<string, unknown>;
   actor?: Pick<User, 'id' | 'name' | 'image'> | null;
   createdAt: Date;

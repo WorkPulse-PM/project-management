@@ -1,23 +1,34 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { apiBase } from '@/lib/api';
 import {
   notificationTypeToColor,
   notificationTypeToIcon,
   notificationTypeToTitle,
 } from '@/lib/notificationTypeMap';
-import { cn } from '@/lib/utils';
-import { formatDate, formatDistanceToNow } from 'date-fns';
-import { Bell } from 'lucide-react';
-import { apiBase } from '@/lib/api';
 import {
   NotificationStatus,
   type Notification,
   type NotificationsResponse,
 } from '@/lib/types/notificationTypes';
+import { cn } from '@/lib/utils';
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { formatDistanceToNow } from 'date-fns';
+import { Bell } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { getInitials } from '../ui/avatar-group';
 import NotificationMessage from './NotificationMessage';
+
+const getNotificationTargetURL = (notification: Notification) => {
+  switch (notification.type) {
+    case 'PROJECT_INVITATION_RECEIVED':
+      return `/invitations/${notification.payload.invitationToken}`;
+
+    default:
+      return '#';
+  }
+};
 
 type Props = {
   isOpen: boolean;
@@ -103,8 +114,11 @@ export default function NotificationBox({ isOpen }: Props) {
             const title = notificationTypeToTitle[notification.type];
             const avatar = notification.actor?.image || undefined;
 
+            const targetUrl = getNotificationTargetURL(notification);
+
             return (
-              <div
+              <Link
+                to={targetUrl}
                 key={notification.id}
                 className={cn(
                   'group relative p-3 transition-all duration-200 hover:bg-fill1 flex border-l-3 border-l-transparent',
@@ -165,7 +179,7 @@ export default function NotificationBox({ isOpen }: Props) {
                     </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             );
           })
         )}
