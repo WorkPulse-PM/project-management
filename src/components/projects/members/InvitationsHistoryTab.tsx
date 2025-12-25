@@ -1,5 +1,15 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -17,43 +27,45 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import useInvitationActions from '@/hooks/useInvitationActions';
 import { apiBase } from '@/lib/api';
-import { useQuery } from '@tanstack/react-query';
+import { InvitationStatus, type Invitation } from '@/lib/types/invitationTypes';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatDistanceToNow } from 'date-fns';
-import { UserPlus } from 'lucide-react';
+import { Ban, Send, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-
-type Invitation = {
-  id: string;
-  email: string;
-  role: { id: string; name: string };
-  status: 'accepted' | 'pending' | 'expired';
-  createdAt: string;
-  expiresAt: string | null;
-  invitedByUser: {
-    id: string;
-    name: string;
-    email: string;
-  };
-};
+import { toast } from 'sonner';
 
 export default function InvitationsHistoryTab({
   openInviteModal,
 }: {
   openInviteModal: VoidFunction;
 }) {
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [revokeId, setRevokeId] = useState<string | null>(null);
 
   const { projectId } = useParams();
   const { data, isPending } = useQuery({
     queryKey: ['projects', projectId, 'invitations-history'],
     queryFn: async () => {
-      const res = await apiBase.get<Invitation[]>(`/${projectId}/invitations`);
+      const res = await apiBase.get<Invitation[]>(
+        `/projects/${projectId}/invitations`
+      );
       return res.data;
     },
   });
+
+  const { revokeMutation, inviteMutation } = useInvitationActions();
+
+  const confirmRevoke = async () => {
+    if (!revokeId) return;
+    await revokeMutation.mutateAsync(revokeId);
+    setRevokeId(null);
+    toast.success('Invitation revoked successfully');
+  };
 
   const filtered = useMemo(() => {
     return (
@@ -123,6 +135,7 @@ export default function InvitationsHistoryTab({
               <TableHead>Invited By</TableHead>
               <TableHead>Created</TableHead>
               <TableHead>Expires At</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
 
@@ -142,20 +155,26 @@ export default function InvitationsHistoryTab({
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{item.email}</TableCell>
                   <TableCell>{item.role.name}</TableCell>
-                  <TableCell>
+                  <TableCell className="flex flex-col gap-1 justify-center">
                     <Badge
+                      size={'20'}
                       color={
-                        item.status === 'accepted'
+                        item.status === 'ACCEPTED'
                           ? 'success'
-                          : item.status === 'pending'
+                          : item.status === 'PENDING'
                             ? 'warning'
-                            : item.status === 'expired'
+                            : item.status === 'EXPIRED'
                               ? 'error'
                               : 'neutral'
                       }
                     >
                       {item.status}
                     </Badge>
+                    {item.status === InvitationStatus.REVOKED && (
+                      <p className="text-xs text-fg-tertiary">
+                        By {item.revokedByUser.name}
+                      </p>
+                    )}
                   </TableCell>
                   <TableCell>{item.invitedByUser.name}</TableCell>
                   <TableCell>
@@ -166,12 +185,79 @@ export default function InvitationsHistoryTab({
                   <TableCell>
                     {item.expiresAt ? formatDistanceToNow(item.expiresAt) : '—'}
                   </TableCell>
+                  <TableCell>
+                    {item.status === 'PENDING' && (
+                      <Button
+                        variant={'soft'}
+                        size={'28'}
+                        color="error"
+                        onClick={() => setRevokeId(item.id)}
+                      >
+                        <Ban />
+                        Revoke
+                      </Button>
+                    )}
+                    {item.status === InvitationStatus.REVOKED && (
+                      <Button
+                        variant={'soft'}
+                        size={'28'}
+                        onClick={() => {
+                          inviteMutation.mutateAsync({
+                            email: item.email,
+                            roleId: item.roleId,
+                          });
+                        }}
+                        loading={inviteMutation.isPending}
+                        disabled={inviteMutation.isPending}
+                      >
+                        <Send />
+                        Send another invite
+                      </Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
       )}
+
+      <Dialog
+        open={!!revokeId}
+        onOpenChange={state => {
+          if (!state) setRevokeId(null);
+        }}
+      >
+        <DialogContent closeButton="hidden">
+          <DialogHeader>
+            <DialogTitle>Revoke Invitation?</DialogTitle>
+            <DialogDescription className="leading-5">
+              Are you sure you want to revoke this invitation? This cannot be
+              undone. You'll have to send a new invitation to invite this user
+              again.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button
+                color="neutral"
+                variant="outline"
+                disabled={revokeMutation.isPending}
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button
+              variant="strong"
+              loading={revokeMutation.isPending}
+              disabled={revokeMutation.isPending}
+              onClick={confirmRevoke}
+            >
+              Revoke
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

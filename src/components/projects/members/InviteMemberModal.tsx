@@ -25,14 +25,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import useInvitationActions from '@/hooks/useInvitationActions';
 import useLookup from '@/hooks/useLookup';
-import { apiBase } from '@/lib/api';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
-import { useParams } from 'react-router-dom';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 const FormSchema = z.object({
@@ -49,20 +46,10 @@ export default function InviteMemberModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const queryClient = useQueryClient();
   const [roles] = useLookup('projectRoles');
-  const { projectId } = useParams();
 
-  const { mutateAsync, isPending } = useMutation({
-    mutationFn: (body: any) => apiBase.post(`/${projectId}/invite`, body),
-    async onSuccess({ data }) {
-      toast.success(data?.message || 'Invitation sent successfully');
-      onOpenChange(false);
-      await queryClient.invalidateQueries({
-        queryKey: ['projects', projectId, 'invitations-history'],
-      });
-    },
-  });
+  const { inviteMutation } = useInvitationActions();
+  const { mutateAsync, isPending } = inviteMutation;
 
   const form = useForm<InviteMemberFormValues>({
     resolver: zodResolver(FormSchema),
@@ -79,6 +66,7 @@ export default function InviteMemberModal({
       email: values.email,
       roleId: values.role,
     });
+    onOpenChange(false);
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal>
