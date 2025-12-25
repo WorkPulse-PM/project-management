@@ -4,12 +4,16 @@ import MembersTab from '@/components/projects/members/MembersTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send, Users } from 'lucide-react';
 import { useState } from 'react';
+import { useQueryState } from 'nuqs';
 
 export default function MembersPage() {
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useQueryState('tab', {
+    defaultValue: 'members',
+  });
   return (
     <>
-      <Tabs defaultValue="members">
+      <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
         <TabsList width={'full'} size={'lg'}>
           <TabsTrigger value="members" className="cursor-pointer">
             <Users />
