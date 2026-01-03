@@ -1,5 +1,6 @@
 import ProjectCard from '@/components/dashboard/ProjectCard';
 import { Button } from '@/components/ui/button';
+import NoProjectsYet from '@/components/ui/no-projects.yet';
 import { Spinner } from '@/components/ui/spinner';
 import { apiBase } from '@/lib/api';
 import type { ProjectCardType } from '@/lib/types/projectTypes';
@@ -8,7 +9,7 @@ import { PlusIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const DashboardPage = () => {
-  const { data, isPending } = useQuery<ProjectCardType[]>({
+  const { data, isPending } = useQuery({
     queryKey: ['projects', 'list'],
     staleTime: 1000 * 60 * 60, // 1 hour
     queryFn: async () => {
@@ -31,17 +32,21 @@ const DashboardPage = () => {
           </Link>
         </Button>
       </div>
-      <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))] grid-rows-[repeat(auto-fill,minmax(auto,1fr))]">
-        {isPending ? (
-          <Spinner />
-        ) : (
-          data?.map(project => (
+      {isPending ? (
+        <Spinner />
+      ) : data?.length === 0 ? (
+        <div className="flex justify-center items-center h-[600px]">
+          <NoProjectsYet />
+        </div>
+      ) : (
+        <div className="grid gap-4 grid-cols-[repeat(auto-fill,minmax(260px,1fr))] grid-rows-[repeat(auto-fill,minmax(auto,1fr))]">
+          {data?.map(project => (
             <Link to={`/projects/${project.id}`}>
               <ProjectCard {...project} projectKey={project.key} />
             </Link>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

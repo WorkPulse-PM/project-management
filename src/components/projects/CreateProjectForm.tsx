@@ -122,7 +122,7 @@ const CreateProjectForm = ({
   }, [form.subscribe]);
 
   return (
-    <div className="w-full mt-[15%]">
+    <div className="w-full mt-10">
       <div className="max-w-md gap-6 p-4 mx-auto border rounded-md">
         <h2 className="text-2xl font-bold text-fg">Create New Project</h2>
         <Divider className="my-4" />
