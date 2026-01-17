@@ -3,13 +3,18 @@ import BoardColumnsSkeleton from '@/components/skeletons/BoardColumnsSkeleton';
 import { apiBase } from '@/lib/api';
 import type { BoardColumn } from '@/lib/types/projectTypes';
 import { DragOverlay } from '@dnd-kit/core';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { useQueryState } from 'nuqs';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { BoardTaskBase } from './BoardTask';
 import DndProvider from './DndProvider';
-import { TaskDetailModal } from './TaskDetailModal';
+import { TaskDetailModal, type TaskDetail } from './TaskDetailModal';
 
 export default function ProjectBoard() {
   const { projectId } = useParams();
@@ -29,6 +34,54 @@ export default function ProjectBoard() {
       return data;
     },
   });
+
+  // Get all task IDs from the board
+  const allTaskIds = useMemo(() => {
+    if (!board) return [];
+    return board.flatMap(column => column.tasks.map(task => task.id));
+  }, [board]);
+
+  // Fetch task details for ALL tasks to get their assignees
+  const taskQueries = useQueries({
+    queries: allTaskIds.map(taskId => ({
+      queryKey: ['tasks', projectId, taskId],
+      queryFn: async () => {
+        const response = await apiBase.get<TaskDetail>(
+          `/projects/${projectId}/tasks/${taskId}`
+        );
+        return response.data;
+      },
+      enabled: !!projectId && !!taskId,
+      staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    })),
+  });
+
+  // Create a map of task IDs to their assignees
+  const taskAssigneesMap = useMemo(() => {
+    const map = new Map<string, TaskDetail['assignees']>();
+    taskQueries.forEach(query => {
+      if (query.data) {
+        map.set(query.data.id, query.data.assignees);
+      }
+    });
+    return map;
+  }, [taskQueries]);
+
+  // Get the selected task's detail
+  const selectedTask = useMemo(() => {
+    if (!selectedTaskId) return undefined;
+    const query = taskQueries.find(q => q.data?.id === selectedTaskId);
+    return query?.data;
+  }, [selectedTaskId, taskQueries]);
+
+  const isLoadingSelectedTask = useMemo(() => {
+    if (!selectedTaskId) return false;
+    const query = taskQueries.find(q => q.data?.id === selectedTaskId);
+    return query?.isLoading || false;
+  }, [selectedTaskId, taskQueries]);
+
+  console.log('Task Assignees Map: ', taskAssigneesMap);
+  console.log('Selected Task Detail: ', selectedTask);
 
   // Mutation to update task status
   const updateTaskMutation = useMutation({
@@ -129,6 +182,7 @@ export default function ProjectBoard() {
             <Column
               key={column.id}
               column={column}
+              taskAssigneesMap={taskAssigneesMap}
               onTaskClick={taskId => setSelectedTaskId(taskId)}
             />
           ))}
@@ -140,13 +194,15 @@ export default function ProjectBoard() {
               task={draggingTask}
               isDragging={false}
               columnName={activeColumn.name}
+              assignees={taskAssigneesMap.get(draggingTask.id)}
             />
           ) : null}
         </DragOverlay>
       </DndProvider>
       {!!selectedTaskId && (
         <TaskDetailModal
-          taskId={selectedTaskId}
+          task={selectedTask}
+          isLoading={isLoadingSelectedTask}
           open={!!selectedTaskId}
           onOpenChange={open => {
             if (!open) {

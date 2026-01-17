@@ -3,12 +3,15 @@ import type { BoardColumn } from '@/lib/types/projectTypes';
 import { useDroppable } from '@dnd-kit/core';
 import { BoardTask } from './BoardTask';
 import ColumnHeader from './ColumnHeader';
+import type { TaskDetail } from './TaskDetailModal';
 
 export function Column({
   column,
+  taskAssigneesMap,
   onTaskClick,
 }: {
   column: BoardColumn;
+  taskAssigneesMap: Map<string, TaskDetail['assignees']>;
   onTaskClick?: (taskId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
@@ -27,6 +30,7 @@ export function Column({
             key={task.id}
             task={task}
             columnName={column.name}
+            assignees={taskAssigneesMap.get(task.id)}
             onClick={() => onTaskClick?.(task.id)}
           />
         ))}

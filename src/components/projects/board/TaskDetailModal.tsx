@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/select';
 import useLookup from '@/hooks/useLookup';
 import { apiBase } from '@/lib/api';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, formatDate } from 'date-fns';
 import { CalendarIcon, Check, Paperclip, UserPlus } from 'lucide-react';
 import { useState } from 'react';
@@ -60,13 +60,15 @@ export type TaskDetail = {
 };
 
 type TaskDetailModalProps = {
-  taskId: string | null;
+  task?: TaskDetail;
+  isLoading: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
 export function TaskDetailModal({
-  taskId,
+  task,
+  isLoading,
   open,
   onOpenChange,
 }: TaskDetailModalProps) {
@@ -75,19 +77,6 @@ export function TaskDetailModal({
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAssigneesOpen, setIsAssigneesOpen] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
-
-  // Fetch task details
-  const { data: task, isLoading } = useQuery<TaskDetail>({
-    // staleTime: 1000 * 60 * 5, // 5 mins
-    queryKey: ['tasks', projectId, taskId],
-    queryFn: async () => {
-      const response = await apiBase.get<TaskDetail>(
-        `/projects/${projectId}/tasks/${taskId}`
-      );
-      return response.data;
-    },
-    enabled: !!taskId && open,
-  });
 
   // Fetch task statuses and project members
   const [taskStatuses] = useLookup('taskStatuses');
@@ -103,13 +92,13 @@ export function TaskDetailModal({
       assigneeIds?: string[];
     }) => {
       return await apiBase.patch(
-        `/projects/${projectId}/tasks/${taskId}`,
+        `/projects/${projectId}/tasks/${task?.id}`,
         payload
       );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ['tasks', projectId, taskId],
+        queryKey: ['tasks', projectId, task?.id],
       });
       queryClient.invalidateQueries({
         queryKey: ['projects', projectId, 'board'],
@@ -161,9 +150,7 @@ export function TaskDetailModal({
   };
 
   // Parse due date - handle both date string and Date object
-  const dueDate = task?.dueDate
-    ? new Date(task.dueDate) // Add time to avoid timezone issues
-    : undefined;
+  const dueDate = task?.dueDate ? new Date(task.dueDate) : undefined;
 
   if (!task && !isLoading) return null;
 
@@ -305,7 +292,7 @@ export function TaskDetailModal({
                       >
                         <PopoverTrigger asChild>
                           {assignedUserIds.length > 0 ? (
-                            <div className="rounded-md cursor-pointer hover:bg-gray-100">
+                            <div className="rounded-md cursor-pointer hover:bg-fill2">
                               <AvatarGroup avatars={task.assignees} />
                             </div>
                           ) : (
