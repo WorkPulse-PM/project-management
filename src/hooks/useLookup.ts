@@ -6,14 +6,21 @@ export type LookupData<T extends string> = {
   [key in T]: Array<{ label: string; value: string; [key: string]: any }>;
 };
 
-export default function useLookup(key: string) {
+export const lookupKeys = [
+  'projectRoles',
+  'taskStatuses',
+  'projectMembers',
+] as const;
+export type LookupKeys = (typeof lookupKeys)[number];
+
+export default function useLookup<T extends LookupKeys>(key: T) {
   const { projectId } = useParams();
   const { data, isFetching } = useQuery({
     queryKey: ['lookup', projectId, key],
     enabled: !!key,
     staleTime: Infinity,
     queryFn: async () => {
-      const response = await apiBase.get<LookupData<typeof key>>(
+      const response = await apiBase.get<LookupData<T>>(
         `/lookups/${projectId}?keys=${key}`
       );
       return response.data;
