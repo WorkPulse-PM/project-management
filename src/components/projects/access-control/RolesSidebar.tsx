@@ -11,9 +11,14 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { usePermission } from '@/hooks/use-permission';
+import { apiBase } from '@/lib/api';
 import type { Role } from '@/lib/types/roleTypes';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Plus, Search } from 'lucide-react';
 import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import RoleListItem from './RoleListItem';
 
 export default function RolesSidebar({
@@ -25,6 +30,9 @@ export default function RolesSidebar({
   roles: Role[];
   onRoleSelect: (id: string) => void;
 }) {
+  const { can } = usePermission();
+  const { projectId } = useParams();
+  const queryClient = useQueryClient();
   const [isCreateRoleOpen, setIsCreateRoleOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -35,25 +43,31 @@ export default function RolesSidebar({
     role.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const createRoleMutation = useMutation({
+    mutationFn: async (data: { name: string; description: string }) => {
+      await apiBase.post(`/rbac/${projectId}/role`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['project', projectId, 'roles'],
+      });
+      setIsCreateRoleOpen(false);
+      setNewRoleName('');
+      setNewRoleDescription('');
+      toast.success('Role created successfully');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to create role');
+    },
+  });
+
   const handleCreateRole = () => {
     if (!newRoleName.trim()) return;
 
-    // const newRole: Role = {
-    //   id: newRoleName.toLowerCase().replace(/\s+/g, '-') + '-' + Date.now(),
-    //   name: newRoleName,
-    //   description: newRoleDescription || 'No description provided.',
-    //   usersCount: 0,
-    //   permissions: MOCK_RESOURCES.map(r => ({
-    //     ...r,
-    //     actions: { create: false, read: true, update: false, delete: false },
-    //   })),
-    // };
-
-    // setRoles([...roles, newRole]);
-    // setSelectedRoleId(newRole.id);
-    // setIsCreateRoleOpen(false);
-    // setNewRoleName('');
-    // setNewRoleDescription('');
+    createRoleMutation.mutate({
+      name: newRoleName,
+      description: newRoleDescription,
+    });
   };
 
   return (
@@ -74,13 +88,15 @@ export default function RolesSidebar({
               />
             </div>
           </div>
-          <Button
-            className="w-full flex gap-2"
-            variant="soft"
-            onClick={() => setIsCreateRoleOpen(true)}
-          >
-            <Plus className="h-4 w-4" /> Create New Role
-          </Button>
+          {can('role:create') && (
+            <Button
+              className="w-full flex gap-2"
+              variant="soft"
+              onClick={() => setIsCreateRoleOpen(true)}
+            >
+              <Plus className="h-4 w-4" /> Create New Role
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="flex-1 overflow-auto px-0 space-y-3">
           {filteredRoles.map(role => (
@@ -135,8 +151,11 @@ export default function RolesSidebar({
             >
               Cancel
             </Button>
-            <Button onClick={handleCreateRole} disabled={!newRoleName.trim()}>
-              Create Role
+            <Button
+              onClick={handleCreateRole}
+              disabled={!newRoleName.trim() || createRoleMutation.isPending}
+            >
+              {createRoleMutation.isPending ? 'Creating...' : 'Create Role'}
             </Button>
           </DialogFooter>
         </DialogContent>

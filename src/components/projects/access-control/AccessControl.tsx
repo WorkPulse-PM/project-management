@@ -1,3 +1,4 @@
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,22 +13,16 @@ import {
   DropdownItem,
   DropdownTrigger,
 } from '@/components/ui/dropdown';
+import { usePermission } from '@/hooks/use-permission';
 import { apiBase } from '@/lib/api';
 import type { Permission } from '@/lib/types/permissionTypes';
 import type { Role } from '@/lib/types/roleTypes';
-import { useQuery } from '@tanstack/react-query';
-import {
-  FileText,
-  Layout,
-  MoreVertical,
-  Settings,
-  Trash2,
-  Users,
-} from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Layout, Lock, MoreVertical, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { toast } from 'sonner';
 import PermissionGroup from './PermissionGroup';
-import { type PermissionAction } from './RoleListItem';
 import RolesSidebar from './RolesSidebar';
 
 type GroupedPermissions = {
@@ -37,11 +32,14 @@ type GroupedPermissions = {
 
 export default function AccessControlPage() {
   const { projectId } = useParams();
+  const queryClient = useQueryClient();
+  const { can } = usePermission();
+
   const { data: roles = [] } = useQuery({
     queryKey: ['project', projectId, 'roles'],
     queryFn: async () => {
       const { data } = await apiBase.get<Role[]>(`/rbac/${projectId}/roles`);
-      if (!selectedRoleId) setSelectedRoleId(data[0]?.id);
+      if (!selectedRoleId && data.length > 0) setSelectedRoleId(data[0].id);
       return data;
     },
   });
@@ -55,23 +53,43 @@ export default function AccessControlPage() {
     },
   });
 
-  const [selectedRoleId, setSelectedRoleId] = useState<string>(roles[0]?.id);
+  const [selectedRoleId, setSelectedRoleId] = useState<string>('');
   const [selectedRolePermissions, setSelectedRolePermissions] = useState<
     string[]
   >([]);
-  console.log(
-    '🚀 ~ AccessControlPage ~ selectedRolePermissions:',
-    selectedRolePermissions.length
-  );
 
   const selectedRole = roles.find(r => r.id === selectedRoleId) || roles[0];
+  const isOwnerRole = selectedRole?.name === 'Owner';
 
   useEffect(() => {
     if (!selectedRole?.permissions) return;
     setSelectedRolePermissions(selectedRole.permissions.map(p => p.key));
-  }, [selectedRoleId]);
+  }, [selectedRole]);
 
-  const handlePermissionCheckedChange = (key: string) => {
+  const updatePermissionsMutation = useMutation({
+    mutationFn: async ({
+      roleId,
+      permissions,
+    }: {
+      roleId: string;
+      permissions: string[];
+    }) => {
+      await apiBase.put(`/rbac/${projectId}/roles/${roleId}/permissions`, {
+        permissions,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['project', projectId, 'roles'],
+      });
+      toast.success('Permissions updated successfully');
+    },
+    onError: () => {
+      toast.error('Failed to update permissions');
+    },
+  });
+
+  const handlePermissionCheckedChange = async (key: string) => {
     const isAlreadyChecked = selectedRolePermissions.includes(key);
 
     let newPermissions: string[] = [];
@@ -82,41 +100,37 @@ export default function AccessControlPage() {
       newPermissions = [...selectedRolePermissions, key];
     }
     setSelectedRolePermissions(newPermissions);
+
+    // Save changes
+    updatePermissionsMutation.mutate({
+      roleId: selectedRoleId,
+      permissions: newPermissions,
+    });
   };
 
-  const handleUpdatePermission = (
-    resourceId: string,
-    action: PermissionAction,
-    value: boolean
-  ) => {
-    // if (selectedRole.isSystem) return; // Prevent editing system roles for demo
-    // setRoles(prev =>
-    //   prev.map(role => {
-    //     if (role.id === selectedRoleId) {
-    //       return {
-    //         ...role,
-    //         permissions: role.permissions.map(p => {
-    //           if (p.id === resourceId) {
-    //             return {
-    //               ...p,
-    //               actions: { ...p.actions, [action]: value },
-    //             };
-    //           }
-    //           return p;
-    //         }),
-    //       };
-    //     }
-    //     return role;
-    //   })
-    // );
-  };
+  const deleteRoleMutation = useMutation({
+    mutationFn: async (roleId: string) => {
+      await apiBase.delete(`/rbac/${projectId}/roles/${roleId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['project', projectId, 'roles'],
+      });
+      toast.success('Role deleted successfully');
+      setSelectedRoleId('');
+    },
+    onError: (error: any) => {
+      toast.error(error.response?.data?.message || 'Failed to delete role');
+    },
+  });
 
   const handleDeleteRole = (id: string) => {
-    // setRoles(prev => prev.filter(r => r.id !== id));
-    // if (selectedRoleId === id) {
-    //   setSelectedRoleId(roles[0].id || '');
-    // }
+    if (confirm('Are you sure you want to delete this role?')) {
+      deleteRoleMutation.mutate(id);
+    }
   };
+
+  const canUpdateRole = can('role:update');
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col gap-6 relative">
@@ -146,17 +160,17 @@ export default function AccessControlPage() {
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <CardTitle className="text-xl">{selectedRole?.name}</CardTitle>
-                {/* {selectedRole?.isSystem && (
+                {isOwnerRole && (
                   <Badge variant="soft" color="neutral" className="gap-1">
                     <Lock className="h-3 w-3" /> System Default
                   </Badge>
-                )} */}
+                )}
               </div>
               {selectedRole?.description && (
                 <CardDescription>{selectedRole?.description}</CardDescription>
               )}
             </div>
-            {selectedRole && (
+            {selectedRole && can('role:delete') && !isOwnerRole && (
               <Dropdown>
                 <DropdownTrigger asChild>
                   <Button variant="ghost" size="36" className="h-8 w-8 p-0">
@@ -188,17 +202,13 @@ export default function AccessControlPage() {
                         key={group}
                         icon={Layout}
                         label={group}
-                        description={'Lorem Ipsum'}
+                        description={''}
                         permissions={permissions}
                         allowedPermissions={selectedRolePermissions}
                         onPermissionCheckedChange={
                           handlePermissionCheckedChange
                         }
-                        // actions={group.actions}
-                        // onChange={(action, value) =>
-                        //   handleUpdatePermission(group.id, action, value)
-                        // }
-                        // readOnly={selectedRole.isSystem}
+                        readOnly={!canUpdateRole}
                       />
                     ))}
                   </div>
@@ -212,11 +222,6 @@ export default function AccessControlPage() {
           </CardContent>
         </Card>
       </div>
-
-      {/* <div className="fixed bottom-10 left-1/2 right-1/2 z-50 p-2 bg-white shadow w-fit flex gap-2 items-center border rounded-md">
-        <p className="text-nowrap">You have unsaved changes.</p>
-        <Button>Save</Button>
-      </div> */}
     </div>
   );
 }

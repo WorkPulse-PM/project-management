@@ -1,9 +1,5 @@
 import { Switch, SwitchWrapper } from '@/components/ui/switch';
-import type { PermissionAction } from './RoleListItem';
 import type { Permission } from '@/lib/types/permissionTypes';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
 
 const PermissionGroup = ({
   icon: Icon,
@@ -12,9 +8,7 @@ const PermissionGroup = ({
   permissions,
   allowedPermissions,
   onPermissionCheckedChange,
-  // actions,
-  // onChange,
-  // readOnly,
+  readOnly,
 }: {
   icon: React.ElementType;
   label: string;
@@ -22,9 +16,7 @@ const PermissionGroup = ({
   permissions: Permission[];
   allowedPermissions: string[];
   onPermissionCheckedChange: (key: string) => void;
-  // actions: Record<PermissionAction, boolean>;
-  // onChange: (action: PermissionAction, value: boolean) => void;
-  // readOnly?: boolean;
+  readOnly?: boolean;
 }) => {
   return (
     <div className="flex flex-col gap-4 rounded-lg border p-4">
@@ -54,7 +46,7 @@ const PermissionGroup = ({
                 onCheckedChange={() =>
                   onPermissionCheckedChange(permission.key)
                 }
-                // disabled={readOnly}
+                disabled={readOnly}
                 size="20"
               />
             </SwitchWrapper>
