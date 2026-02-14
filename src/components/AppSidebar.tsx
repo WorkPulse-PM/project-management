@@ -26,11 +26,11 @@ import { Divider } from './ui/divider';
 
 const defaultNavigationItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/' },
-  {
-    label: 'Invitations',
-    icon: MailOpen,
-    path: '/invitations',
-  },
+  // {
+  //   label: 'Invitations',
+  //   icon: MailOpen,
+  //   path: '/invitations',
+  // },
 ];
 
 export default function AppSidebar() {

@@ -57,16 +57,16 @@ export const ProjectSpecificNavigation = () => {
       icon: UserLock,
       path: `/projects/${projectId}/access-control`,
     },
-    {
-      label: 'Attachments',
-      icon: Paperclip,
-      path: `/projects/${projectId}/attachments`,
-    },
-    {
-      label: 'Projects Settings',
-      icon: Settings,
-      path: `/projects/${projectId}/settings`,
-    },
+    // {
+    //   label: 'Attachments',
+    //   icon: Paperclip,
+    //   path: `/projects/${projectId}/attachments`,
+    // },
+    // {
+    //   label: 'Projects Settings',
+    //   icon: Settings,
+    //   path: `/projects/${projectId}/settings`,
+    // },
   ];
 
   return items.map(item => <NavigationItem {...item} />);
