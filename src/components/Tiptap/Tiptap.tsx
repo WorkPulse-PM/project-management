@@ -9,12 +9,13 @@ import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import type { ClassValue } from 'clsx';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import CustomBubbleMenu from './CustomBubbleMenu';
 
 const Tiptap = ({
   classNames,
   placeholder = 'Start typing...',
+  content,
   ...rest
 }: {
   classNames?: ClassValue;
@@ -35,8 +36,17 @@ const Tiptap = ({
         ),
       },
     },
+    content,
+    immediatelyRender: false,
     ...rest,
   });
+
+  // Update editor content when content prop changes
+  useEffect(() => {
+    if (editor && content !== undefined && editor.getHTML() !== content) {
+      editor.commands.setContent(content);
+    }
+  }, [editor, content]);
 
   const providerValue = useMemo(() => ({ editor }), [editor]);
 

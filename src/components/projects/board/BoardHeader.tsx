@@ -20,6 +20,7 @@ export default function BoardHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useQueryState('task');
+  const [createTaskOpen, setCreateTaskOpen] = useState(false);
 
   const { data: project, isPending: isLoadingProject } = useQuery({
     enabled: !!projectId,
@@ -64,6 +65,7 @@ export default function BoardHeader() {
     const query = searchQuery.toLowerCase();
     return allTasks.filter(
       task =>
+        task.key.toLowerCase().includes(query) ||
         task.title.toLowerCase().includes(query) ||
         task.description?.toLowerCase().includes(query)
     );
@@ -96,12 +98,12 @@ export default function BoardHeader() {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
-  // Reset search when dialog closes
-  useEffect(() => {
-    if (!searchOpen) {
+  const handleOpenChange = (open: boolean) => {
+    setSearchOpen(open);
+    if (!open) {
       setSearchQuery('');
     }
-  }, [searchOpen]);
+  };
 
   const handleTaskSelect = (taskId: string) => {
     setSelectedTaskId(taskId);
@@ -141,7 +143,7 @@ export default function BoardHeader() {
             </IconButton>
           </div>
 
-          <Dialog>
+          <Dialog open={createTaskOpen} onOpenChange={setCreateTaskOpen}>
             <DialogTrigger asChild>
               <Button>
                 <PlusIcon />
@@ -152,7 +154,10 @@ export default function BoardHeader() {
               className="max-w-4xl max-h-[90vh] overflow-y-auto gap-1 rounded-xl"
               backdrop="overlay"
             >
-              <CreateTaskForm projectId={projectId!} />
+              <CreateTaskForm
+                projectId={projectId!}
+                onSuccess={() => setCreateTaskOpen(false)}
+              />
             </DialogContent>
           </Dialog>
         </div>
@@ -161,12 +166,12 @@ export default function BoardHeader() {
       {/* Task Search Command Dialog */}
       <CommandDialog
         open={searchOpen}
-        onOpenChange={setSearchOpen}
+        onOpenChange={handleOpenChange}
         title="Search Tasks"
         description="Search for tasks across all columns"
       >
         <CommandInput
-          placeholder="Search tasks by title..."
+          placeholder="Search tasks by key, title, or description..."
           value={searchQuery}
           onValueChange={setSearchQuery}
         />
@@ -200,9 +205,14 @@ export default function BoardHeader() {
                           )}
                         />
                         <div className="flex flex-col gap-1 flex-1 min-w-0">
-                          <span className="font-medium truncate">
-                            {task.title}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono text-fg-tertiary shrink-0">
+                              {task.key}
+                            </span>
+                            <span className="font-medium truncate">
+                              {task.title}
+                            </span>
+                          </div>
                           {task.description && (
                             <span className="text-xs text-fg-tertiary line-clamp-1">
                               {task.description}

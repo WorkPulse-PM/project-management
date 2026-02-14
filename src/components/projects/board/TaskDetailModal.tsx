@@ -36,7 +36,7 @@ import useLookup from '@/hooks/useLookup';
 import { apiBase } from '@/lib/api';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, formatDate } from 'date-fns';
-import { CalendarIcon, Check, Paperclip, UserPlus } from 'lucide-react';
+import { CalendarIcon, Check, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
@@ -168,240 +168,207 @@ export function TaskDetailModal({
               <p className="text-fg-secondary">Loading task details...</p>
             </div>
           ) : task ? (
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-              {/* Main Content Column (2/3 width) */}
-              <div className="flex flex-col gap-2 lg:col-span-2">
-                {/* Title */}
-                <div className="flex flex-col gap-2">
-                  {isEditingTitle ? (
-                    <div className="flex gap-2">
-                      <Input
-                        defaultValue={task.title}
-                        onBlur={e => {
-                          saveFieldChange('title', e.target.value);
-                          setIsEditingTitle(false);
-                        }}
-                        onKeyDown={e => {
-                          if (e.key === 'Enter') {
-                            saveFieldChange('title', e.currentTarget.value);
-                            setIsEditingTitle(false);
-                          }
-                        }}
-                        autoFocus
-                        className="text-lg font-semibold"
-                      />
-                    </div>
-                  ) : (
-                    <h2
-                      className="py-1 text-lg font-semibold rounded-md text-fg-primary cursor-text"
-                      onClick={() => {
-                        setIsEditingTitle(true);
+            <div className="flex flex-col gap-2">
+              {/* Title */}
+              <div className="flex flex-col gap-2">
+                {isEditingTitle ? (
+                  <div className="flex gap-2">
+                    <Input
+                      defaultValue={task.title}
+                      onBlur={e => {
+                        saveFieldChange('title', e.target.value);
+                        setIsEditingTitle(false);
                       }}
-                    >
-                      {task.title}
-                    </h2>
-                  )}
-                </div>
-                <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 ">
-                  {/* Status */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium uppercase text-fg-secondary">
-                      Status
-                    </label>
-                    <Select
-                      value={task.status.id}
-                      onValueChange={value =>
-                        saveFieldChange('statusId', value)
-                      }
-                    >
-                      <SelectTrigger size="28">
-                        <SelectValue>
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          saveFieldChange('title', e.currentTarget.value);
+                          setIsEditingTitle(false);
+                        }
+                      }}
+                      autoFocus
+                      className="text-lg font-semibold"
+                    />
+                  </div>
+                ) : (
+                  <h2
+                    className="py-1 text-lg font-semibold rounded-md text-fg-primary cursor-text"
+                    onClick={() => {
+                      setIsEditingTitle(true);
+                    }}
+                  >
+                    {task.title}
+                  </h2>
+                )}
+              </div>
+              <div className="flex flex-col gap-2 sm:grid sm:grid-cols-3 ">
+                {/* Status */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium uppercase text-fg-secondary">
+                    Status
+                  </label>
+                  <Select
+                    value={task.status.id}
+                    onValueChange={value => saveFieldChange('statusId', value)}
+                  >
+                    <SelectTrigger size="28">
+                      <SelectValue>
+                        <div className="flex items-center gap-2">
+                          {task.status.color && (
+                            <div
+                              className="rounded-full size-3"
+                              style={{ backgroundColor: task.status.color }}
+                            />
+                          )}
+                          {task.status.name}
+                        </div>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {taskStatuses.map(status => (
+                        <SelectItem key={status.value} value={status.value}>
                           <div className="flex items-center gap-2">
-                            {task.status.color && (
+                            {status.color && (
                               <div
                                 className="rounded-full size-3"
-                                style={{ backgroundColor: task.status.color }}
+                                style={{ backgroundColor: status.color }}
                               />
                             )}
-                            {task.status.name}
+                            {status.label}
                           </div>
-                        </SelectValue>
-                      </SelectTrigger>
-                      <SelectContent>
-                        {taskStatuses.map(status => (
-                          <SelectItem key={status.value} value={status.value}>
-                            <div className="flex items-center gap-2">
-                              {status.color && (
-                                <div
-                                  className="rounded-full size-3"
-                                  style={{ backgroundColor: status.color }}
-                                />
-                              )}
-                              {status.label}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  {/* Due Date */}
+                {/* Due Date */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium uppercase text-fg-secondary">
+                    Due Date
+                  </label>
+                  <Popover
+                    open={isCalendarOpen}
+                    onOpenChange={setIsCalendarOpen}
+                  >
+                    <PopoverTrigger asChild>
+                      <Button
+                        size="28"
+                        variant="outline"
+                        color="neutral"
+                        className="justify-start w-full gap-2"
+                      >
+                        <CalendarIcon className="size-4" />
+                        {dueDate ? (
+                          format(dueDate, 'PPP')
+                        ) : (
+                          <span className="text-fg-tertiary">Set due date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dueDate}
+                        onSelect={handleDueDateChange}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                {/* Assignees */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-xs font-medium uppercase text-fg-secondary">
+                    Assignees
+                  </label>
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium uppercase text-fg-secondary">
-                      Due Date
-                    </label>
                     <Popover
-                      open={isCalendarOpen}
-                      onOpenChange={setIsCalendarOpen}
+                      open={isAssigneesOpen}
+                      onOpenChange={setIsAssigneesOpen}
                     >
                       <PopoverTrigger asChild>
-                        <Button
-                          size="28"
-                          variant="outline"
-                          color="neutral"
-                          className="justify-start w-full gap-2"
-                        >
-                          <CalendarIcon className="size-4" />
-                          {dueDate ? (
-                            format(dueDate, 'PPP')
-                          ) : (
-                            <span className="text-fg-tertiary">
-                              Set due date
-                            </span>
-                          )}
-                        </Button>
+                        {assignedUserIds.length > 0 ? (
+                          <div className="rounded-md cursor-pointer hover:bg-fill2">
+                            <AvatarGroup avatars={task.assignees} />
+                          </div>
+                        ) : (
+                          <Button
+                            size="28"
+                            variant="outline"
+                            color="neutral"
+                            className="justify-start w-full gap-2"
+                          >
+                            <UserPlus className="size-4" />
+                            Assign
+                          </Button>
+                        )}
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={dueDate}
-                          onSelect={handleDueDateChange}
-                        />
+                      <PopoverContent
+                        className="w-64 p-0 z-1000"
+                        align="start"
+                        side="bottom"
+                      >
+                        <Command>
+                          <CommandInput
+                            placeholder="Search members..."
+                            className="h-9"
+                          />
+                          <CommandList>
+                            <CommandEmpty>No members found.</CommandEmpty>
+                            <CommandGroup>
+                              {projectMembers.map(member => {
+                                const isAssigned = assignedUserIds.includes(
+                                  member.value
+                                );
+                                return (
+                                  <CommandItem
+                                    key={member.value}
+                                    value={member.label}
+                                    onSelect={() =>
+                                      handleAssigneeToggle(
+                                        member.value,
+                                        !isAssigned
+                                      )
+                                    }
+                                    className="flex items-center gap-2 cursor-pointer"
+                                  >
+                                    <Avatar size="24">
+                                      <AvatarImage
+                                        src={member.image || undefined}
+                                      />
+                                      <AvatarFallback>
+                                        {getInitials(member.label)}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <span className="flex-1 text-sm text-fg-secondary">
+                                      {member.label}
+                                    </span>
+                                    {isAssigned && (
+                                      <Check className="size-4 text-success" />
+                                    )}
+                                  </CommandItem>
+                                );
+                              })}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
                       </PopoverContent>
                     </Popover>
-                  </div>
-                  {/* Assignees */}
-                  <div className="flex flex-col gap-2">
-                    <label className="text-xs font-medium uppercase text-fg-secondary">
-                      Assignees
-                    </label>
-                    <div className="flex flex-col gap-2">
-                      <Popover
-                        open={isAssigneesOpen}
-                        onOpenChange={setIsAssigneesOpen}
-                      >
-                        <PopoverTrigger asChild>
-                          {assignedUserIds.length > 0 ? (
-                            <div className="rounded-md cursor-pointer hover:bg-fill2">
-                              <AvatarGroup avatars={task.assignees} />
-                            </div>
-                          ) : (
-                            <Button
-                              size="28"
-                              variant="outline"
-                              color="neutral"
-                              className="justify-start w-full gap-2"
-                            >
-                              <UserPlus className="size-4" />
-                              Assign
-                            </Button>
-                          )}
-                        </PopoverTrigger>
-                        <PopoverContent
-                          className="w-64 p-0 z-1000"
-                          align="start"
-                          side="bottom"
-                        >
-                          <Command>
-                            <CommandInput
-                              placeholder="Search members..."
-                              className="h-9"
-                            />
-                            <CommandList>
-                              <CommandEmpty>No members found.</CommandEmpty>
-                              <CommandGroup>
-                                {projectMembers.map(member => {
-                                  const isAssigned = assignedUserIds.includes(
-                                    member.value
-                                  );
-                                  return (
-                                    <CommandItem
-                                      key={member.value}
-                                      value={member.label}
-                                      onSelect={() =>
-                                        handleAssigneeToggle(
-                                          member.value,
-                                          !isAssigned
-                                        )
-                                      }
-                                      className="flex items-center gap-2 cursor-pointer"
-                                    >
-                                      <Avatar size="24">
-                                        <AvatarImage
-                                          src={member.image || undefined}
-                                        />
-                                        <AvatarFallback>
-                                          {getInitials(member.label)}
-                                        </AvatarFallback>
-                                      </Avatar>
-                                      <span className="flex-1 text-sm text-fg-secondary">
-                                        {member.label}
-                                      </span>
-                                      {isAssigned && (
-                                        <Check className="size-4 text-success" />
-                                      )}
-                                    </CommandItem>
-                                  );
-                                })}
-                              </CommandGroup>
-                            </CommandList>
-                          </Command>
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div className="flex flex-col gap-2 mt-2 ">
-                  <h3 className="text-sm font-medium text-fg-secondary">
-                    Description
-                  </h3>
-
-                  <Tiptap
-                    placeholder="Add a description..."
-                    content={task.description}
-                    onBlur={({ editor }) =>
-                      saveFieldChange('description', editor.getHTML())
-                    }
-                  />
-                </div>
-
-                {/* Attachments Section */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-medium text-fg-secondary">
-                      Attachments
-                    </h3>
-                    <Button
-                      size="32"
-                      variant="outline"
-                      color="neutral"
-                      className="gap-2"
-                    >
-                      <Paperclip className="size-4" />
-                      Add Attachment
-                    </Button>
-                  </div>
-                  <div className="p-4 text-sm border rounded-md border-border bg-elevation-level1 text-fg-tertiary">
-                    No attachments yet
                   </div>
                 </div>
               </div>
 
-              {/* Sidebar Column (1/3 width) */}
-              <div className="flex flex-col gap-4 lg:col-span-1">
-                Activities
+              {/* Description */}
+              <div className="flex flex-col gap-2 mt-2 ">
+                <h3 className="text-sm font-medium text-fg-secondary">
+                  Description
+                </h3>
+
+                <Tiptap
+                  placeholder="Add a description..."
+                  content={task.description}
+                  onBlur={({ editor }) =>
+                    saveFieldChange('description', editor.getHTML())
+                  }
+                />
               </div>
             </div>
           ) : null}
