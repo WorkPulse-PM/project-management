@@ -11,11 +11,13 @@ export function Column({
   taskAssigneesMap,
   onTaskClick,
   sortBy = 'default',
+  filterByAssignee = 'all',
 }: {
   column: BoardColumn;
   taskAssigneesMap: Map<string, TaskDetail['assignees']>;
   onTaskClick?: (taskId: string) => void;
   sortBy?: string;
+  filterByAssignee?: string;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id });
 
@@ -45,6 +47,26 @@ export function Column({
     return tasks;
   }, [column.tasks, sortBy]);
 
+  // Filter tasks based on assignee
+  const filteredTasks = useMemo(() => {
+    if (filterByAssignee === 'all') {
+      return sortedTasks;
+    }
+
+    if (filterByAssignee === 'unassigned') {
+      return sortedTasks.filter(task => {
+        const assignees = taskAssigneesMap.get(task.id);
+        return !assignees || assignees.length === 0;
+      });
+    }
+
+    // Filter by specific assignee
+    return sortedTasks.filter(task => {
+      const assignees = taskAssigneesMap.get(task.id);
+      return assignees?.some(assignee => assignee.id === filterByAssignee);
+    });
+  }, [sortedTasks, filterByAssignee, taskAssigneesMap]);
+
   return (
     <div
       ref={setNodeRef}
@@ -54,7 +76,7 @@ export function Column({
     >
       <ColumnHeader column={column} />
       <div className="flex flex-col gap-3">
-        {sortedTasks.map(task => (
+        {filteredTasks.map(task => (
           <BoardTask
             key={task.id}
             task={task}

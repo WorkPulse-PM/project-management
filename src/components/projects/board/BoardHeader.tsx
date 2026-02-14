@@ -15,6 +15,7 @@ import {
   PlusIcon,
   SearchIcon,
   UserRoundPlusIcon,
+  Filter,
 } from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useEffect, useMemo, useState } from 'react';
@@ -35,6 +36,9 @@ export default function BoardHeader() {
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
   const [sortBy, setSortBy] = useQueryState('sort', {
     defaultValue: 'default',
+  });
+  const [filterByAssignee, setFilterByAssignee] = useQueryState('assignee', {
+    defaultValue: 'all',
   });
 
   const { data: project, isPending: isLoadingProject } = useQuery({
@@ -156,18 +160,29 @@ export default function BoardHeader() {
             </SelectContent>
           </Select>
 
+          <Select
+            value={filterByAssignee || 'all'}
+            onValueChange={setFilterByAssignee}
+          >
+            <SelectTrigger size="36" className="w-[180px]">
+              <Filter className="size-4" />
+              <SelectValue placeholder="Filter by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Tasks</SelectItem>
+              <SelectItem value="unassigned">Unassigned</SelectItem>
+              {project?.members?.map(member => (
+                <SelectItem key={member.id} value={member.id}>
+                  {member.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
           <div className="flex items-center gap-2">
             {project?.members && (
               <AvatarGroup size="40" avatars={project.members} />
             )}
-            <IconButton
-              size={'32'}
-              className="rounded-full"
-              variant={'outline'}
-              color="neutral"
-            >
-              <UserRoundPlusIcon size={25} />
-            </IconButton>
           </div>
 
           <Dialog open={createTaskOpen} onOpenChange={setCreateTaskOpen}>
