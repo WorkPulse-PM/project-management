@@ -14,6 +14,13 @@ import { PlusIcon, SearchIcon } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getInitials } from '@/components/ui/avatar-group';
+import StatsCard from '@/components/dashboard/StatsCard';
+import {
+  FolderKanban,
+  ListTodo,
+  AlertCircle,
+  CheckCircle2,
+} from 'lucide-react';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -25,6 +32,25 @@ const DashboardPage = () => {
     staleTime: 1000 * 60 * 60, // 1 hour
     queryFn: async () => {
       const res = await apiBase.get<ProjectCardType[]>('/projects');
+      return res.data;
+    },
+  });
+
+  // Fetch dashboard stats
+  const { data: stats, isPending: isLoadingStats } = useQuery<{
+    totalProjects: number;
+    totalTasks: number;
+    tasksByStatus: Array<{
+      status: string;
+      color: string | null;
+      count: number;
+    }>;
+    overdueTasks: number;
+  }>({
+    queryKey: ['dashboard', 'stats'],
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    queryFn: async () => {
+      const res = await apiBase.get('/projects/stats');
       return res.data;
     },
   });
@@ -98,6 +124,40 @@ const DashboardPage = () => {
           </Button>
         </div>
       </div>
+
+      {/* Stats Cards */}
+      {!isLoadingStats && stats && (
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Total Projects"
+            value={stats.totalProjects}
+            icon={FolderKanban}
+            description="Active projects"
+          />
+          <StatsCard
+            title="Total Tasks"
+            value={stats.totalTasks}
+            icon={ListTodo}
+            description="Across all projects"
+          />
+          <StatsCard
+            title="Overdue Tasks"
+            value={stats.overdueTasks}
+            icon={AlertCircle}
+            description="Needs attention"
+            className={stats.overdueTasks > 0 ? 'border-error-text/20' : ''}
+          />
+          <StatsCard
+            title="Completed"
+            value={
+              stats.tasksByStatus.find(s => s.status === 'Done')?.count || 0
+            }
+            icon={CheckCircle2}
+            description="Tasks completed"
+            className="border-success-text/20"
+          />
+        </div>
+      )}
 
       {/* Project Grid */}
       {isPending ? (

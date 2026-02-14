@@ -24,6 +24,7 @@ import MembersPage from './pages/projects/members/members-page';
 import { lazy } from 'react';
 import ProjectProvider from './providers/ProjectProvider';
 import AccessControlPage from './pages/projects/access-control';
+import ProjectOverviewPage from './pages/projects/project-overview-page';
 
 const ProfilePage = lazy(() => import('./pages/profile-page'));
 
@@ -70,6 +71,10 @@ const router = createBrowserRouter([
                   {
                     index: true,
                     element: <Navigate to="board" replace />,
+                  },
+                  {
+                    path: 'overview',
+                    Component: ProjectOverviewPage,
                   },
                   {
                     path: 'board',
