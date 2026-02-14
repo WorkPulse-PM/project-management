@@ -10,10 +10,22 @@ import { apiBase } from '@/lib/api';
 import type { BoardColumn, Project } from '@/lib/types/projectTypes';
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
-import { PlusIcon, SearchIcon, UserRoundPlusIcon } from 'lucide-react';
+import {
+  ArrowUpDown,
+  PlusIcon,
+  SearchIcon,
+  UserRoundPlusIcon,
+} from 'lucide-react';
 import { useQueryState } from 'nuqs';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function BoardHeader() {
   const { projectId } = useParams();
@@ -21,6 +33,9 @@ export default function BoardHeader() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTaskId, setSelectedTaskId] = useQueryState('task');
   const [createTaskOpen, setCreateTaskOpen] = useState(false);
+  const [sortBy, setSortBy] = useQueryState('sort', {
+    defaultValue: 'default',
+  });
 
   const { data: project, isPending: isLoadingProject } = useQuery({
     enabled: !!projectId,
@@ -128,6 +143,18 @@ export default function BoardHeader() {
               <span className="text-xs">⌘</span>K
             </kbd>
           </Button>
+
+          <Select value={sortBy || 'default'} onValueChange={setSortBy}>
+            <SelectTrigger size="36" className="w-[180px]">
+              <ArrowUpDown className="size-4" />
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="default">Default</SelectItem>
+              <SelectItem value="due-date-asc">Due Date (Earliest)</SelectItem>
+              <SelectItem value="due-date-desc">Due Date (Latest)</SelectItem>
+            </SelectContent>
+          </Select>
 
           <div className="flex items-center gap-2">
             {project?.members && (

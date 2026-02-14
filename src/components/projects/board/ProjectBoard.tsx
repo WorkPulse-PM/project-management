@@ -18,6 +18,7 @@ import { TaskDetailModal, type TaskDetail } from './TaskDetailModal';
 
 export default function ProjectBoard() {
   const { projectId } = useParams();
+  const [sortBy] = useQueryState('sort');
 
   const queryClient = useQueryClient();
   const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
@@ -181,6 +182,7 @@ export default function ProjectBoard() {
               column={column}
               taskAssigneesMap={taskAssigneesMap}
               onTaskClick={taskId => setSelectedTaskId(taskId)}
+              sortBy={sortBy || 'default'}
             />
           ))}
         </div>
