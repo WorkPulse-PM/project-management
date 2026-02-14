@@ -29,7 +29,7 @@ export default function ProjectOverviewPage() {
   // Fetch project stats
   const { data: stats, isPending: isLoadingStats } = useQuery<ProjectStats>({
     queryKey: ['projects', projectId, 'stats'],
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    // staleTime: 1000 * 60 * 5, // 5 minutes
     enabled: !!projectId,
     queryFn: async () => {
       const res = await apiBase.get(`/projects/${projectId}/stats`);

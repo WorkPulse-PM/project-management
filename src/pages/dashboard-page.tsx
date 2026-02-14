@@ -48,7 +48,7 @@ const DashboardPage = () => {
     overdueTasks: number;
   }>({
     queryKey: ['dashboard', 'stats'],
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    // staleTime: 1000 * 60 * 5, // 5 minutes
     queryFn: async () => {
       const res = await apiBase.get('/projects/stats');
       return res.data;
