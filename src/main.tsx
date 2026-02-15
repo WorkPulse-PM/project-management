@@ -80,6 +80,7 @@ const router = createBrowserRouter([
                     path: 'board',
                     Component: ProjectBoardPage,
                   },
+
                   {
                     path: 'members',
                     Component: MembersPage,

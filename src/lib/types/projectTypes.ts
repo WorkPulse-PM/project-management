@@ -27,12 +27,17 @@ export type BoardColumn = {
   tasks: BoardTask[];
 };
 
+export type TaskType = 'TASK' | 'STORY';
+
 export type BoardTask = {
   id: string;
   title: string;
   key: string;
   dueDate: string;
   status: TaskStatus;
+  type?: TaskType;
+  parentId?: string | null;
+  children?: BoardTask[];
 };
 
 export type TaskStatus = {

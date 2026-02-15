@@ -33,11 +33,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import useLookup from '@/hooks/useLookup';
+import type { BoardColumn } from '@/lib/types/projectTypes';
 import { apiBase } from '@/lib/api';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { format, formatDate } from 'date-fns';
-import { CalendarIcon, Check, UserPlus } from 'lucide-react';
-import { useState } from 'react';
+import { CalendarIcon, Check, UserPlus, ChevronsUpDown } from 'lucide-react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 
 export type TaskDetail = {
@@ -57,6 +58,28 @@ export type TaskDetail = {
     name: string;
     color: string | null;
   };
+  type?: 'TASK' | 'STORY';
+  parentId?: string | null;
+  children?: Array<{
+    id: string;
+    title: string;
+    key: string;
+    status: {
+      id: string;
+      name: string;
+      color: string | null;
+    };
+    assignees: Array<{
+      id: string;
+      name: string;
+      image: string | null;
+    }>;
+  }>;
+  parent?: {
+    id: string;
+    title: string;
+    key: string;
+  };
 };
 
 type TaskDetailModalProps = {
@@ -64,6 +87,7 @@ type TaskDetailModalProps = {
   isLoading: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onTaskSelect?: (taskId: string) => void;
 };
 
 export function TaskDetailModal({
@@ -71,32 +95,57 @@ export function TaskDetailModal({
   isLoading,
   open,
   onOpenChange,
+  onTaskSelect,
 }: TaskDetailModalProps) {
   const { projectId } = useParams();
   const queryClient = useQueryClient();
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isAssigneesOpen, setIsAssigneesOpen] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [subtaskTitle, setSubtaskTitle] = useState('');
+  const [isParentStoryOpen, setIsParentStoryOpen] = useState(false);
 
   // Fetch task statuses and project members
   const [taskStatuses] = useLookup('taskStatuses');
   const [projectMembers] = useLookup('projectMembers');
 
-  // Mutation to update task
-  const updateTaskMutation = useMutation({
-    mutationFn: async (payload: {
-      title?: string;
-      description?: string;
-      statusId?: string;
-      dueDate?: string | null;
-      assigneeIds?: string[];
-    }) => {
-      return await apiBase.patch(
-        `/projects/${projectId}/tasks/${task?.id}`,
-        payload
+  // Fetch board data to get stories
+  const { data: board } = useQuery({
+    queryKey: ['projects', projectId, 'board'],
+    queryFn: async () => {
+      const res = await apiBase.get<BoardColumn[]>(
+        `/projects/${projectId}/board`
       );
+      return res;
+    },
+    select: (res: any) => res.data,
+    enabled: !!projectId && open,
+  });
+
+  const stories = useMemo(() => {
+    if (!board) return [];
+    // Only include STORIES to be used as parents, excluding self
+    return board
+      .flatMap(c => c.tasks)
+      .filter(t => t.type === 'STORY' && t.id !== task?.id)
+      .map(s => ({
+        id: s.id,
+        title: s.title,
+        key: s.key,
+      }));
+  }, [board, task?.id]);
+
+  // Mutation to create subtask
+  const createSubtaskMutation = useMutation({
+    mutationFn: async (title: string) => {
+      return await apiBase.post(`/projects/${projectId}/tasks`, {
+        title,
+        parentId: task?.id,
+        type: 'TASK',
+      });
     },
     onSuccess: () => {
+      setSubtaskTitle('');
       queryClient.invalidateQueries({
         queryKey: ['tasks', projectId, task?.id],
       });
@@ -106,15 +155,53 @@ export function TaskDetailModal({
     },
   });
 
+  // Mutation to update task
+  const updateTaskMutation = useMutation({
+    mutationFn: async (payload: {
+      title?: string;
+      description?: string;
+      statusId?: string;
+      dueDate?: string | null;
+      assigneeIds?: string[];
+      parentId?: string | null;
+    }) => {
+      return await apiBase.patch(
+        `/projects/${projectId}/tasks/${task?.id}`,
+        payload
+      );
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tasks', projectId, task?.id],
+      });
+      // Invalidate old parent if exists
+      if (task?.parentId) {
+        queryClient.invalidateQueries({
+          queryKey: ['tasks', projectId, task.parentId],
+        });
+      }
+      // Invalidate new parent if assigned
+      if (variables.parentId) {
+        queryClient.invalidateQueries({
+          queryKey: ['tasks', projectId, variables.parentId],
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: ['projects', projectId, 'board'],
+      });
+    },
+  });
+
   const saveFieldChange = (
-    field: 'title' | 'description' | 'statusId' | 'dueDate',
-    value: string
+    field: 'title' | 'description' | 'statusId' | 'dueDate' | 'parentId',
+    value: string | null
   ) => {
-    const taskValues = {
+    const taskValues: any = {
       title: task?.title,
       description: task?.description,
       statusId: task?.status?.id,
       dueDate: task?.dueDate,
+      parentId: task?.parentId,
     };
 
     if (taskValues[field] !== value) {
@@ -158,11 +245,26 @@ export function TaskDetailModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl gap-1 rounded-xl" backdrop="overlay">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <TaskKeyBadge taskKey={task?.key} />
-          </DialogTitle>
+          <div className="flex flex-col gap-2 items-start py-2">
+            {task?.parent && (
+              <div
+                role="button"
+                className="flex items-center gap-2 mb-1 px-1.5 py-1 -ml-1.5 text-xs text-fg-secondary hover:text-fg-primary hover:bg-fill2 rounded-md cursor-pointer transition-colors"
+                onClick={() => onTaskSelect?.(task.parent!.id)}
+              >
+                <TaskKeyBadge taskKey={task.parent.key} />
+                <span className="text-fg-tertiary">/</span>
+                <span className="font-medium truncate max-w-[300px]">
+                  {task.parent.title}
+                </span>
+              </div>
+            )}
+            <DialogTitle className="flex items-center gap-2">
+              <TaskKeyBadge taskKey={task?.key} />
+            </DialogTitle>
+          </div>
         </DialogHeader>
-        <DialogBody className="max-h-[90vh] min-h-[400px] overflow-auto no-scrollbar">
+        <DialogBody className="max-h-[80vh] min-h-[400px] overflow-auto no-scrollbar">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <p className="text-fg-secondary">Loading task details...</p>
@@ -354,6 +456,93 @@ export function TaskDetailModal({
                     </Popover>
                   </div>
                 </div>
+
+                {/* Parent Story (for TASKS) */}
+                {task.type === 'TASK' && (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-medium uppercase text-fg-secondary">
+                      Parent Story
+                    </label>
+                    <Popover
+                      open={isParentStoryOpen}
+                      onOpenChange={setIsParentStoryOpen}
+                    >
+                      <PopoverTrigger asChild>
+                        <Button
+                          size="28"
+                          variant="outline"
+                          color="neutral"
+                          className="justify-between w-full gap-2 px-2 font-normal"
+                        >
+                          <div className="flex items-center gap-2 truncate text-ellipsis overflow-hidden">
+                            {task.parent ? (
+                              <>
+                                <TaskKeyBadge taskKey={task.parent.key} />
+                                <span className="truncate">
+                                  {task.parent.title}
+                                </span>
+                              </>
+                            ) : (
+                              <span className="text-fg-tertiary">
+                                Select Story
+                              </span>
+                            )}
+                          </div>
+                          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-[300px] p-0" align="start">
+                        <Command>
+                          <CommandInput placeholder="Search stories..." />
+                          <CommandList>
+                            <CommandEmpty>No stories found.</CommandEmpty>
+                            <CommandGroup>
+                              <CommandItem
+                                value="none"
+                                onSelect={() => {
+                                  saveFieldChange('parentId', null);
+                                  setIsParentStoryOpen(false);
+                                }}
+                                className="text-fg-secondary cursor-pointer"
+                              >
+                                No Parent
+                              </CommandItem>
+                              {stories.map(story => (
+                                <CommandItem
+                                  key={story.id}
+                                  value={story.id + ' ' + story.title}
+                                  onSelect={() => {
+                                    saveFieldChange('parentId', story.id);
+                                    setIsParentStoryOpen(false);
+                                  }}
+                                  className="cursor-pointer"
+                                >
+                                  <div className="flex items-center gap-2 w-full overflow-hidden">
+                                    <Check
+                                      className={`mr-2 size-4 shrink-0 ${
+                                        task.parent?.id === story.id
+                                          ? 'opacity-100'
+                                          : 'opacity-0'
+                                      }`}
+                                    />
+                                    <div className="flex flex-col truncate">
+                                      <span className="font-medium truncate">
+                                        {story.title}
+                                      </span>
+                                      <span className="text-xs text-fg-secondary">
+                                        {story.key}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </CommandItem>
+                              ))}
+                            </CommandGroup>
+                          </CommandList>
+                        </Command>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
               </div>
 
               {/* Description */}
@@ -370,6 +559,80 @@ export function TaskDetailModal({
                   }
                 />
               </div>
+
+              {/* Subtasks (for Stories) */}
+              {task.type === 'STORY' && (
+                <div className="flex flex-col gap-2 mt-4">
+                  <h3 className="text-sm font-medium text-fg-secondary">
+                    Subtasks
+                  </h3>
+                  <div className="flex flex-col gap-2">
+                    {task.children?.map(child => (
+                      <div
+                        key={child.id}
+                        onClick={() => onTaskSelect?.(child.id)}
+                        className="flex items-center justify-between p-2 border rounded-lg bg-surface hover:bg-fill2 cursor-pointer transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <TaskKeyBadge taskKey={child.key} />
+                          <span className="text-sm font-medium text-fg-primary">
+                            {child.title}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex -space-x-2">
+                            {child.assignees.map(a => (
+                              <Avatar
+                                key={a.id}
+                                size="20"
+                                className="border-bg"
+                              >
+                                {a.image && <AvatarImage src={a.image} />}
+                                <AvatarFallback>
+                                  {getInitials(a.name)}
+                                </AvatarFallback>
+                              </Avatar>
+                            ))}
+                          </div>
+                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-fill2">
+                            {child.status.color && (
+                              <div
+                                className="w-1.5 h-1.5 rounded-full"
+                                style={{ backgroundColor: child.status.color }}
+                              />
+                            )}
+                            <span className="text-xs font-medium text-fg-secondary">
+                              {child.status.name}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Add Subtask */}
+                  <div className="flex gap-2 mt-2">
+                    <Input
+                      placeholder="Add a subtask..."
+                      value={subtaskTitle}
+                      onChange={e => setSubtaskTitle(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && subtaskTitle.trim()) {
+                          createSubtaskMutation.mutate(subtaskTitle);
+                        }
+                      }}
+                    />
+                    <Button
+                      disabled={
+                        !subtaskTitle.trim() || createSubtaskMutation.isPending
+                      }
+                      onClick={() => createSubtaskMutation.mutate(subtaskTitle)}
+                    >
+                      Add
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           ) : null}
         </DialogBody>

@@ -129,7 +129,7 @@ export default function ProjectBoard() {
     queryClient.setQueryData(['projects', projectId, 'board'], (old: any) => {
       if (!old?.data) return old;
 
-      const newBoard = old.data.map(col => ({ ...col }));
+      const newBoard = old.data.map(col => ({ ...col, tasks: [...col.tasks] }));
       let movedTask = null;
 
       // Remove task from old column
@@ -210,6 +210,7 @@ export default function ProjectBoard() {
               setSelectedTaskId(null);
             }
           }}
+          onTaskSelect={taskId => setSelectedTaskId(taskId)}
         />
       )}
     </>

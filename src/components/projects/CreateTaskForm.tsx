@@ -16,6 +16,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { apiBase } from '@/lib/api';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
@@ -29,6 +36,7 @@ export const FormSchema = z.object({
   title: z.string().trim().min(1, 'Task title is required'),
   description: z.string().optional(),
   dueDate: z.date().optional(),
+  type: z.enum(['TASK', 'STORY']).default('TASK'),
 });
 
 export type CreateTaskFormValues = z.infer<typeof FormSchema>;
@@ -67,6 +75,7 @@ const CreateTaskForm = ({
       title: '',
       description: '',
       dueDate: undefined,
+      type: 'TASK',
     },
   });
 
@@ -116,6 +125,30 @@ const CreateTaskForm = ({
                           }
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="type"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Type</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="TASK">Task</SelectItem>
+                          <SelectItem value="STORY">Story</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
