@@ -5,12 +5,15 @@ import {
   useEditor,
   type UseEditorOptions,
 } from '@tiptap/react';
-import { BubbleMenu } from '@tiptap/react/menus';
+import { BubbleMenu, FloatingMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import Underline from '@tiptap/extension-underline';
+import Link from '@tiptap/extension-link';
 import type { ClassValue } from 'clsx';
 import { useEffect, useMemo } from 'react';
 import CustomBubbleMenu from './CustomBubbleMenu';
+import CustomFloatingMenu from './CustomFloatingMenu';
 
 const Tiptap = ({
   classNames,
@@ -21,17 +24,26 @@ const Tiptap = ({
   classNames?: ClassValue;
   placeholder?: string;
 } & UseEditorOptions) => {
-  const editor = useEditor({
-    extensions: [
+  const extensions = useMemo(
+    () => [
       StarterKit,
       Placeholder.configure({
         placeholder,
       }),
+      Underline,
+      Link.configure({
+        openOnClick: false,
+      }),
     ],
+    [placeholder]
+  );
+
+  const editor = useEditor({
+    extensions,
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm prose-p:my-0 prose-li:my-1 prose-headings:my-1 max-w-none overflow-auto min-h-[120px] p-3 rounded-md border border-border bg-elevation-level1 transition-all focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary/50 tiptap',
+          'prose prose-sm dark:prose-invert prose-p:my-0 prose-li:my-1 prose-headings:my-1 max-w-none overflow-auto min-h-[120px] p-3 rounded-md border border-border bg-elevation-level1 transition-all focus-within:outline-none focus-within:ring-2 focus-within:ring-primary/30 focus-within:border-primary/50 tiptap',
           classNames
         ),
       },
@@ -53,7 +65,9 @@ const Tiptap = ({
   return (
     <EditorContext.Provider value={providerValue}>
       <EditorContent editor={editor} />
-      {/* <FloatingMenu editor={editor}>This is the floating menu</FloatingMenu> */}
+      <FloatingMenu editor={editor}>
+        <CustomFloatingMenu />
+      </FloatingMenu>
       <BubbleMenu editor={editor}>
         <CustomBubbleMenu />
       </BubbleMenu>

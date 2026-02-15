@@ -37,9 +37,16 @@ import type { BoardColumn } from '@/lib/types/projectTypes';
 import { apiBase } from '@/lib/api';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { format, formatDate } from 'date-fns';
-import { CalendarIcon, Check, UserPlus, ChevronsUpDown } from 'lucide-react';
+import {
+  CalendarIcon,
+  Check,
+  UserPlus,
+  ChevronsUpDown,
+  Pencil,
+} from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 
 export type TaskDetail = {
   id: string;
@@ -104,6 +111,8 @@ export function TaskDetailModal({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [subtaskTitle, setSubtaskTitle] = useState('');
   const [isParentStoryOpen, setIsParentStoryOpen] = useState(false);
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+  const [draftDescription, setDraftDescription] = useState('');
 
   // Fetch task statuses and project members
   const [taskStatuses] = useLookup('taskStatuses');
@@ -389,7 +398,10 @@ export function TaskDetailModal({
                       <PopoverTrigger asChild>
                         {assignedUserIds.length > 0 ? (
                           <div className="rounded-md cursor-pointer hover:bg-fill2">
-                            <AvatarGroup avatars={task.assignees} />
+                            <AvatarGroup
+                              avatars={task.assignees}
+                              className="text-xs"
+                            />
                           </div>
                         ) : (
                           <Button
@@ -546,18 +558,85 @@ export function TaskDetailModal({
               </div>
 
               {/* Description */}
-              <div className="flex flex-col gap-2 mt-2 ">
-                <h3 className="text-sm font-medium text-fg-secondary">
-                  Description
-                </h3>
+              <div className="flex flex-col gap-2 mt-2 group/desc">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-medium text-fg-secondary">
+                    Description
+                  </h3>
+                  {!isEditingDescription && (
+                    <Button
+                      variant="ghost"
+                      size="28"
+                      className="h-6 px-2 text-xs text-fg-secondary hover:text-fg-primary opacity-0 group-hover/desc:opacity-100 transition-opacity"
+                      onClick={() => {
+                        setDraftDescription(task.description || '');
+                        setIsEditingDescription(true);
+                      }}
+                    >
+                      <Pencil className="size-3 mr-1" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
 
-                <Tiptap
-                  placeholder="Add a description..."
-                  content={task.description}
-                  onBlur={({ editor }) =>
-                    saveFieldChange('description', editor.getHTML())
-                  }
-                />
+                {isEditingDescription ? (
+                  <div className="flex flex-col gap-2">
+                    <Tiptap
+                      placeholder="Add a description..."
+                      content={draftDescription} // Use draft state
+                      onUpdate={({ editor }) => {
+                        setDraftDescription(editor.getHTML());
+                      }}
+                      classNames="min-h-[120px] p-3 rounded-md border border-primary focus:ring-1 focus:ring-primary"
+                    />
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="ghost"
+                        onClick={() => setIsEditingDescription(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          saveFieldChange('description', draftDescription);
+                          setIsEditingDescription(false);
+                        }}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      'prose prose-sm dark:prose-invert max-w-none p-0 border border-transparent rounded-md min-h-[40px] text-fg-primary cursor-text hover:bg-fill2/50 transition-colors prose-p:my-0 prose-li:my-1 prose-headings:my-1',
+                      !task.description && 'text-fg-tertiary italic'
+                    )}
+                    onClick={() => {
+                      // Click to edit logic removed as requested ("accidental clicks")
+                      // But usually user wants click to edit if empty?
+                      // User said "annoying". So I will disable click to edit
+                      // EXCEPT if no description?
+                      // I'll stick to Edit button.
+                      // But if empty, edit button might be subtle.
+                      // I'll add "Click to add description" placeholder behavior if empty?
+                      if (!task.description) {
+                        setDraftDescription('');
+                        setIsEditingDescription(true);
+                      }
+                    }}
+                  >
+                    {task.description ? (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: task.description,
+                        }}
+                      />
+                    ) : (
+                      'No description provided. Click to add.'
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Subtasks (for Stories) */}
