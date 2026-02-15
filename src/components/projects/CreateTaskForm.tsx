@@ -36,7 +36,7 @@ export const FormSchema = z.object({
   title: z.string().trim().min(1, 'Task title is required'),
   description: z.string().optional(),
   dueDate: z.date().optional(),
-  type: z.enum(['TASK', 'STORY']).default('TASK'),
+  type: z.enum(['TASK', 'STORY']).default('TASK').nonoptional(),
 });
 
 export type CreateTaskFormValues = z.infer<typeof FormSchema>;
