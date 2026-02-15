@@ -3,18 +3,15 @@ import { getMenuColors, getTicketColor } from '@/lib/colorUtils';
 import type { BoardTask } from '@/lib/types/projectTypes';
 import { useDraggable } from '@dnd-kit/core';
 import { Bookmark } from 'lucide-react';
-import type { TaskDetail } from './TaskDetailModal';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function BoardTask({
   task,
   columnName,
-  assignees,
   onClick,
 }: {
   task: BoardTask;
   columnName: string;
-  assignees?: TaskDetail['assignees'];
   onClick?: () => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } =
@@ -33,7 +30,6 @@ export function BoardTask({
       isDragging={isDragging}
       task={task}
       columnName={columnName}
-      assignees={assignees}
       ref={setNodeRef}
       style={style}
       onClick={onClick}
@@ -46,14 +42,12 @@ export function BoardTask({
 type BoardTaskBaseProps = {
   task: BoardTask;
   columnName: string;
-  assignees?: TaskDetail['assignees'];
   isDragging: boolean;
   onClick?: () => void;
 } & Record<string, any>;
 
 export function BoardTaskBase(props: BoardTaskBaseProps) {
-  const { task, columnName, assignees, isDragging, onClick, ...rest } = props;
-  console.log(assignees);
+  const { task, columnName, isDragging, onClick, ...rest } = props;
   // Handle click - dnd-kit should allow clicks when not dragging
   const handleClick = (e: React.MouseEvent) => {
     // Don't trigger click if we're currently dragging
@@ -104,9 +98,9 @@ export function BoardTaskBase(props: BoardTaskBaseProps) {
         </Badge>
 
         <div className="flex -space-x-2.5">
-          {assignees &&
-            assignees.length > 0 &&
-            assignees.map(assignee => (
+          {task.assignees &&
+            task.assignees.length > 0 &&
+            task.assignees.map(assignee => (
               <Avatar
                 size="24"
                 className="border-bg hover:z-10"

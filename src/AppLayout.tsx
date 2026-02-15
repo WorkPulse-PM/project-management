@@ -12,9 +12,17 @@ import {
   SidebarTrigger,
 } from '@/components/ui/sidebar';
 import { DashboardLoading } from '@/helpers/DashboardLoading';
+import { apiBase } from '@/lib/api';
 import { authClient } from '@/lib/authClient';
+import { useQuery } from '@tanstack/react-query';
 import { ListCollapse } from 'lucide-react';
-import { Link, Navigate, Outlet, useLocation } from 'react-router-dom';
+import {
+  Link,
+  Navigate,
+  Outlet,
+  useLocation,
+  useParams,
+} from 'react-router-dom';
 import AppSidebar from './components/AppSidebar';
 import { NotificationBell } from './components/NotificationBell';
 import SocketProvider from './providers/SocketProvider';
@@ -23,10 +31,23 @@ const AppLayout = () => {
   const { data, isPending } = authClient.useSession();
   const location = useLocation();
 
+  // Extract projectId from URL for breadcrumbs
+  const pathnames = location.pathname.split('/').filter(x => x);
+  const { projectId } = useParams();
+
+  const { data: project } = useQuery({
+    queryKey: ['projects', projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      const res = await apiBase.get<{ name: string }>(`/projects/${projectId}`);
+      return res.data;
+    },
+    enabled: !!projectId,
+    staleTime: 5 * 60 * 1000,
+  });
+
   // Generate breadcrumb items from current path
   const getBreadcrumbs = () => {
-    const pathnames = location.pathname.split('/').filter(x => x);
-
     // Always show breadcrumbs
     // If on root, show "Dashboard"
     if (pathnames.length === 0) {
@@ -48,8 +69,12 @@ const AppLayout = () => {
             const path = `/${pathnames.slice(0, index + 1).join('/')}`;
             const isLast = index === pathnames.length - 1;
 
-            // Capitalize first letter of segment for display
-            const label = segment.charAt(0).toUpperCase() + segment.slice(1);
+            let label = segment.charAt(0).toUpperCase() + segment.slice(1);
+
+            // Replace ID with project title
+            if (projectId && segment === projectId && project?.name) {
+              label = project.name;
+            }
 
             return (
               <div key={path} className="flex items-center gap-2">

@@ -38,6 +38,7 @@ export type BoardTask = {
   type?: TaskType;
   parentId?: string | null;
   children?: BoardTask[];
+  assignees: ProjectMember[];
 };
 
 export type TaskStatus = {

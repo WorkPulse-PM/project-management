@@ -49,6 +49,7 @@ export default function BoardHeader() {
       const data = await apiBase.get<Project>(`/projects/${projectId}`);
       return data;
     },
+    staleTime: 5 * 60 * 1000,
   });
 
   // Fetch board data for search

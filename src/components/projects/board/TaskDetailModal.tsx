@@ -179,6 +179,70 @@ export function TaskDetailModal({
         payload
       );
     },
+    onMutate: async newData => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({
+        queryKey: ['projects', projectId, 'board'],
+      });
+      await queryClient.cancelQueries({
+        queryKey: ['tasks', projectId, task?.id],
+      });
+
+      // Snapshot the previous value
+      const previousBoard = queryClient.getQueryData([
+        'projects',
+        projectId,
+        'board',
+      ]);
+      const previousTask = queryClient.getQueryData([
+        'tasks',
+        projectId,
+        task?.id,
+      ]);
+
+      // Optimistically update board
+      if (previousBoard) {
+        queryClient.setQueryData(
+          ['projects', projectId, 'board'],
+          (old: any) => {
+            if (!old?.data) return old;
+            const newBoard = old.data.map((col: any) => {
+              const taskIndex = col.tasks.findIndex(
+                (t: any) => t.id === task?.id
+              );
+              if (taskIndex > -1) {
+                const updatedTask = { ...col.tasks[taskIndex], ...newData };
+                const newTasks = [...col.tasks];
+                newTasks[taskIndex] = updatedTask;
+                return { ...col, tasks: newTasks };
+              }
+              return col;
+            });
+            return { ...old, data: newBoard };
+          }
+        );
+      }
+
+      // Optimistically update individual task query if exists
+      if (previousTask) {
+        queryClient.setQueryData(
+          ['tasks', projectId, task?.id],
+          (old: any) => ({ ...old, ...newData })
+        );
+      }
+
+      return { previousBoard, previousTask };
+    },
+    onError: (err, newTodo, context) => {
+      queryClient.setQueryData(
+        ['projects', projectId, 'board'],
+        context?.previousBoard
+      );
+      queryClient.setQueryData(
+        ['tasks', projectId, task?.id],
+        context?.previousTask
+      );
+    },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['tasks', projectId, task?.id],

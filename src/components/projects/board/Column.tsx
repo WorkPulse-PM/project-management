@@ -4,17 +4,14 @@ import { useDroppable } from '@dnd-kit/core';
 import { useMemo } from 'react';
 import { BoardTask } from './BoardTask';
 import ColumnHeader from './ColumnHeader';
-import type { TaskDetail } from './TaskDetailModal';
 
 export function Column({
   column,
-  taskAssigneesMap,
   onTaskClick,
   sortBy = 'default',
   filterByAssignee = 'all',
 }: {
   column: BoardColumn;
-  taskAssigneesMap: Map<string, TaskDetail['assignees']>;
   onTaskClick?: (taskId: string) => void;
   sortBy?: string;
   filterByAssignee?: string;
@@ -55,17 +52,15 @@ export function Column({
 
     if (filterByAssignee === 'unassigned') {
       return sortedTasks.filter(task => {
-        const assignees = taskAssigneesMap.get(task.id);
-        return !assignees || assignees.length === 0;
+        return !task.assignees || task.assignees.length === 0;
       });
     }
 
     // Filter by specific assignee
     return sortedTasks.filter(task => {
-      const assignees = taskAssigneesMap.get(task.id);
-      return assignees?.some(assignee => assignee.id === filterByAssignee);
+      return task.assignees?.some(assignee => assignee.id === filterByAssignee);
     });
-  }, [sortedTasks, filterByAssignee, taskAssigneesMap]);
+  }, [sortedTasks, filterByAssignee]);
 
   return (
     <div
@@ -81,7 +76,6 @@ export function Column({
             key={task.id}
             task={task}
             columnName={column.name}
-            assignees={taskAssigneesMap.get(task.id)}
             onClick={() => onTaskClick?.(task.id)}
           />
         ))}
